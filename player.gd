@@ -11,6 +11,8 @@ const JUMP_VELOCITY = 4.5
 # Declaring them here to access from other scripts
 var input_dir 
 var direction
+
+# Jumping shtuff
 var temp_vel_x = 0
 var temp_vel_z = 0
 var is_falling = false
