@@ -1,12 +1,12 @@
-[gd_scene load_steps=17 format=4 uid="uid://b0k8i6vldyw7p"]
+[gd_scene load_steps=14 format=4 uid="uid://b0k8i6vldyw7p"]
 
 [ext_resource type="Script" uid="uid://dq330rmky0i00" path="res://Scripts/NetworkedMovement.cs" id="1_a5xx7"]
 [ext_resource type="Texture2D" uid="uid://c86f2jk8e5o4g" path="res://knight_final/knight_best_0.png" id="1_ns1s2"]
 [ext_resource type="Texture2D" uid="uid://hwlovkhx5vco" path="res://knight_final/knight_best_1.png" id="2_b60ip"]
-[ext_resource type="Script" uid="uid://cjpqwyhfpupf4" path="res://Scripts/NetworkedInput.gd" id="4_a5xx7"]
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_a5xx7"]
-radius = 0.3
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_b60ip"]
+radius = 0.35
+height = 1.5
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gwi7q"]
 resource_name = "Paladin_MAT"
@@ -940,25 +940,14 @@ bind/68/name = &"mixamorigRightToe_End"
 bind/68/bone = -1
 bind/68/pose = Transform3D(-0.997995, -1.63774e-06, 0.0632969, 0.0632967, -0.00237248, 0.997992, 0.000148536, 0.999997, 0.00236783, -9.27207, -16.3753, -0.036241)
 
-[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_f2cap"]
-properties/0/path = NodePath("PlayerInput:direction")
-properties/0/spawn = false
-properties/0/replication_mode = 2
-
-[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_a5xx7"]
-properties/0/path = NodePath(".:NetworkId")
-properties/0/spawn = true
-properties/0/replication_mode = 0
-
-[node name="NetworkedPlayer" type="CharacterBody3D" node_paths=PackedStringArray("LocalCamera", "LocalCameraMount", "MultiplayerInput")]
+[node name="NetworkedPlayer" type="CharacterBody3D" node_paths=PackedStringArray("LocalCamera", "LocalCameraMount")]
 script = ExtResource("1_a5xx7")
 LocalCamera = NodePath("camera_mount/Camera3D")
 LocalCameraMount = NodePath("camera_mount")
-MultiplayerInput = NodePath("PlayerInput")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-shape = SubResource("CylinderShape3D_a5xx7")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+shape = SubResource("CapsuleShape3D_b60ip")
 
 [node name="knight" type="Node3D" parent="."]
 transform = Transform3D(-0.01, 0, -8.74228e-10, 0, 0.01, 0, 8.74228e-10, 0, -0.01, 0, 0.9, 0)
@@ -3830,10 +3819,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
 
 [node name="Camera3D" type="Camera3D" parent="camera_mount"]
 transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0.8, 2.6)
-
-[node name="PlayerInput" type="MultiplayerSynchronizer" parent="."]
-replication_config = SubResource("SceneReplicationConfig_f2cap")
-script = ExtResource("4_a5xx7")
-
-[node name="ServerSynchronizer" type="MultiplayerSynchronizer" parent="."]
-replication_config = SubResource("SceneReplicationConfig_a5xx7")

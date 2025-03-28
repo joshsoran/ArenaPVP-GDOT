@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Linq;
 
 public partial class Network : Node
 {
@@ -11,18 +12,32 @@ public partial class Network : Node
     public int MaxClients = 20;
 
     [Export]
-    public String DefaultServerIP = "127.0.0.1";
+    public String DefaultServerIP = "94.174.205.107";
 
     private int _playersLoaded = 0;
 
     private PackedScene Player;
 
+    
+    private Godot.Collections.Dictionary<int, CharacterBody3D> ConnectedPlayers = new Godot.Collections.Dictionary<int, CharacterBody3D>();
+
     [Export]
     private PackedScene NetworkedPlayer;
-    
-    //unused atm
-    [Signal]
-    public delegate void PlayerAddedEventHandler(int peerId);
+
+    [Export]
+    private Path3D PlayerSpawnPath;
+
+    //do _process to see if the player position has changed and then update it idek
+
+    //call this from NetworkedMovment to update the POS
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    private void MoveNetworkedPlayer(int NetworkId, Vector3 NetworkPosition)
+    {
+        //adjust the position in the data
+        ConnectedPlayers[NetworkId].Position = NetworkPosition;
+        //find that players pawn and move it
+
+    }
 
     public override void _Ready()
     {
@@ -91,30 +106,65 @@ public partial class Network : Node
 
     private void OnConnectOk()
     {
+        
         int peerId = Multiplayer.GetUniqueId();
+
+        RpcId(1, MethodName.AddPlayerToServerList, peerId);
+
         GD.Print($"Client ID:{peerId} Connected");
-        if(!Multiplayer.IsServer())
-        {
+
+        //having to many issues with connecting at the same time or something idk
+        // this migth work better with a connect button
+        
+        //Rpc(MethodName.AddPlayer, peerId);
+
+        //Rpc(MethodName.AddPlayer, peerId);
+        
             //add ourselves
-            AddPlayer(peerId);
+            //AddPlayer(peerId);
+            //GD.Print($"Spawning Local Player with ID: {peerId}");
             //load whoever is already connected (could be the local player)
-            foreach (int NetworkId in Multiplayer.GetPeers())
-            {
-                if(NetworkId != peerId && NetworkId != 1)
-                {
-                    AddPlayer(NetworkId);
-                }
-            }
-        }
     }
 
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    private void AddPlayerToServerList(int Id)
+    {
+        if(Id == 1)
+        {
+            return;
+        }
+
+//CHECK WHO IS ALREADY CONNECTED AND SPAWN THEN AND THEN MOVE ON TO SPAWNING YOURSELF FOR EVERYONE
+        foreach (var ConnectedPlayer in ConnectedPlayers)
+        {
+            RpcId(Id, MethodName.AddPlayer, ConnectedPlayer.Key);
+            //AddPlayer(ConnectedPlayerId, SpawnOffset);
+        }
+
+        ConnectedPlayers[Id] = new CharacterBody3D();
+        GD.Print($"Client ID:{Id} added to server list");
+
+        Rpc(MethodName.AddPlayer, Id);
+
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
     private void AddPlayer(int Id)
     {
-            Node NetworkedPlayerInstance = NetworkedPlayer.Instantiate();
-            NetworkedPlayerInstance.Set("NetworkId", Id);
-            NetworkedPlayerInstance.SetMultiplayerAuthority(Id);
-            //NetworkedPlayerInstance.Call("SetNetworkID", Id);
-            AddChild(NetworkedPlayerInstance);
+
+        if(Id == 1)
+        {
+            return;
+        }
+
+        //ConnectedPlayerIds.Add(Id);
+        CharacterBody3D NetworkedPlayerInstance = (CharacterBody3D)NetworkedPlayer.Instantiate();
+        NetworkedPlayerInstance.Set("NetworkId", Id);
+        //NetworkedPlayerInstance.Call("SetNetworkID", Id);
+        GD.Print($"Spawning Player with ID: {Id}");
+        AddChild(NetworkedPlayerInstance);
+        ConnectedPlayers[Id] = NetworkedPlayerInstance;
+        NetworkedPlayerInstance.Position += new Vector3(GD.RandRange(-3, 3), 0, GD.RandRange(-3, 3));
     }
 
     //[TODO: @Cameron]We aren't doing anything on disconnect. Will need to check for this and client closing game to remove the peer
