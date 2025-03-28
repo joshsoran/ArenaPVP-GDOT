@@ -29,16 +29,6 @@ public partial class Network : Node
 
     //do _process to see if the player position has changed and then update it idek
 
-    //call this from NetworkedMovment to update the POS
-    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    private void MoveNetworkedPlayer(int NetworkId, Vector3 NetworkPosition)
-    {
-        //adjust the position in the data
-        ConnectedPlayers[NetworkId].Position = NetworkPosition;
-        //find that players pawn and move it
-
-    }
-
     public override void _Ready()
     {
         base._Ready();
@@ -57,7 +47,14 @@ public partial class Network : Node
         }
 
         Multiplayer.ConnectedToServer += OnConnectOk;
+        Multiplayer.PeerDisconnected += OnDisconnect;
         
+    }
+
+    public void OnDisconnect(long DisconnectedPeerId)
+    {
+        RemoveChild(ConnectedPlayers[(int)DisconnectedPeerId]);
+        ConnectedPlayers.Remove((int)DisconnectedPeerId);
     }
 
     public void CreateServer(string ServerName)
