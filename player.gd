@@ -21,7 +21,7 @@ var is_falling = false
 var smoothed_direction : Vector3 
 # Capture and hide mouse pointer in game
 func _ready():
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 # Camera rotate section	with mouse
 func _input(event):

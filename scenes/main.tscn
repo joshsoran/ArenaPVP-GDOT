@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://bth77ebbsy1a"]
+[gd_scene load_steps=7 format=3 uid="uid://bth77ebbsy1a"]
 
-[ext_resource type="PackedScene" uid="uid://dys77xwgwn2xo" path="res://scenes/player.tscn" id="1_o5qli"]
+[ext_resource type="Script" uid="uid://cnfew5vnos6f1" path="res://Scripts/Network.cs" id="2_0wfyh"]
+[ext_resource type="PackedScene" uid="uid://b0k8i6vldyw7p" path="res://scenes/networked_player.tscn" id="2_sugp2"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0wfyh"]
 sky_horizon_color = Color(0.662243, 0.671743, 0.686743, 1)
@@ -14,6 +15,14 @@ background_mode = 2
 sky = SubResource("Sky_sugp2")
 tonemap_mode = 2
 glow_enabled = true
+
+[sub_resource type="Curve3D" id="Curve3D_0wfyh"]
+closed = true
+_data = {
+"points": PackedVector3Array(0, 0, 0, 0, 0, 0, 0.663246, 0, 5.38285, 0, 0, 0, 0, 0, 0, 0.713015, 0, 4.06398, 0, 0, 0, 0, 0, 0, 0.737898, 0, 2.57092, 0, 0, 0, 0, 0, 0, 0.936974, 0, 0.58018, 0, 0, 0, 0, 0, 0, 0.787668, 0, -0.863108, 0, 0, 0, 0, 0, 0, 0.961857, 0, -2.48059, 0, 0, 0, 0, 0, 0, 1.18582, 0, -3.92387, 0, 0, 0, 0, 0, 0, 0.414404, 0, -5.4667, 0, 0, 0, 0, 0, 0, 1.78304, 0, -6.28788, 0, 0, 0, 0, 0, 0, -1.89983, 0, -4.91925, 0, 0, 0, 0, 0, 0, -1.20307, 0, -4.02341, 0, 0, 0, 0, 0, 0, -1.15331, 0, -2.15709, 0, 0, 0, 0, 0, 0, -1.82518, 0, -1.1866, 0, 0, 0, 0, 0, 0, -1.05377, 0, 0.605064, 0, 0, 0, 0, 0, 0, -1.07865, 0, 1.99858, 0, 0, 0, 0, 0, 0, -3.29335, 0, 2.67046, 0, 0, 0, 0, 0, 0, -1.27773, 0, 3.66583, 0, 0, 0, 0, 0, 0, -4.28872, 0, 0.281568, 0, 0, 0, 0, 0, 0, -3.04451, 0, -3.32665, 0, 0, 0, 0, 0, 0, -5.23433, 0, -2.55524),
+"tilts": PackedFloat32Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+}
+point_count = 20
 
 [node name="Main" type="Node3D"]
 
@@ -70,5 +79,12 @@ size = Vector3(2.8, 1.8, 0.3)
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -0.860001, 1.025, 4.29)
 size = Vector3(6.2, 1.8, 0.3)
 
-[node name="Player" parent="." instance=ExtResource("1_o5qli")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.7, 8.7, -12.1)
+[node name="Network" type="Node3D" parent="." node_paths=PackedStringArray("PlayerSpawnPath")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.50476, 0)
+script = ExtResource("2_0wfyh")
+NetworkedPlayer = ExtResource("2_sugp2")
+PlayerSpawnPath = NodePath("../Path3D")
+
+[node name="Path3D" type="Path3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.26158, 2.5149, 0)
+curve = SubResource("Curve3D_0wfyh")
