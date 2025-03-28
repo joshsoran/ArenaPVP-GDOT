@@ -13,11 +13,18 @@ func _process(delta):
 	if player == null:
 		return
 	# If player isn't falling
-	if !player.is_falling:
+	if player.is_on_floor():
+		animation_tree.set("parameters/Transition/transition_request", "Grounded")		
 		targetspeed = Vector2(player.input_dir.x, player.input_dir.y).normalized()
 		currentspeed = currentspeed.move_toward(-targetspeed, strafe_acceleration * delta)
 		var strafe_input = Vector2(currentspeed.x, -currentspeed.y)
 		animation_tree.set("parameters/Locomotion/blend_position", -strafe_input)
+		
+		# jump animation
 		if Input.is_action_just_pressed("ui_accept") and player.is_on_floor():
 			animation_tree.set("parameters/OneShot/request", 1)
+	elif !player.is_on_floor():
+		# falling animation
+		animation_tree.set("parameters/Transition/transition_request", "Fall")	
+	
 	pass
