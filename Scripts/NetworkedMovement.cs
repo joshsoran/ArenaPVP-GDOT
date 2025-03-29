@@ -59,22 +59,55 @@ public partial class NetworkedMovement : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
-        if(NetworkId != Multiplayer.GetUniqueId())
+        if(NetworkId != Multiplayer.GetUniqueId() || NetworkId == 1)
         {
             return;
         }
-        //gravity
+
+        Vector2 InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
+        bool bJustJumped = Input.IsActionJustPressed("jump");
+        ProcessMovement(InputDirection, bJustJumped, delta);
+        //rpc this to everyone and run locally
+
+        foreach (var Peer in Multiplayer.GetPeers())
+        {
+
+            if(Peer == 1)
+            {
+                continue;
+            }
+            RpcId(Peer, MethodName.ProcessMovement, InputDirection, bJustJumped, delta);
+
+            if(Peer == NetworkId)
+            {
+                continue;
+            }
+            RpcId(Peer, MethodName.ReplicateLook, Rotation);
+            
+        }
+
+
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    public void ReplicateLook(Vector3 LookRotation)
+    {
+        Rotation = LookRotation;
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    public void ProcessMovement(Vector2 InputDirection, bool bJustJumped, double delta)
+    {
+                //gravity
         if(!IsOnFloor())
         {
             _targetVelocity.Y -= Gravity * (float)delta;
         }
 
-        if(Input.IsActionJustPressed("jump") && IsOnFloor())
+        if(bJustJumped && IsOnFloor())
         {
             _targetVelocity.Y = JumpVelocity;
         }
-
-        Vector2 InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
 
         Vector3 Direction = (Transform.Basis * new Vector3(InputDirection.X, 0, InputDirection.Y)).Normalized();
 
@@ -91,27 +124,6 @@ public partial class NetworkedMovement : CharacterBody3D
 
         Velocity = _targetVelocity;
         MoveAndSlide();
-
-        foreach (var Peer in Multiplayer.GetPeers())
-        {
-            if(Peer == NetworkId)
-            {
-                continue;
-            }
-            if(Peer == 1)
-            {
-                continue;
-            }
-            RpcId(Peer, MethodName.ReplicatePosition, Transform);
-        }
-
-
-    }
-
-    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    public void ReplicatePosition(Transform3D NetworkTransform)
-    {
-        Transform = NetworkTransform;
     }
 
 }
