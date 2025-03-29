@@ -86,7 +86,6 @@ public partial class Network : Node
 
     private void OnConnectOk()
     {
-        
         int peerId = Multiplayer.GetUniqueId();
 
         RpcId(1, MethodName.AddPlayerToServerList, peerId);
