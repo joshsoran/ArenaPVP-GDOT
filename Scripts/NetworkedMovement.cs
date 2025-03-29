@@ -49,10 +49,10 @@ public partial class NetworkedMovement : CharacterBody3D
 
         if(@event is InputEventMouseMotion eventMouseMotion)
         {
-            float vertical = eventMouseMotion.Relative.X;
-            RotateY(Mathf.DegToRad(-vertical * MouseSensitivity));
-            float horizontal = eventMouseMotion.Relative.Y;
-            LocalCameraMount.RotateX(Mathf.DegToRad(-horizontal * MouseSensitivity));
+            float VerticalMouseMovement = eventMouseMotion.Relative.X;
+            RotateY(Mathf.DegToRad(-VerticalMouseMovement * MouseSensitivity));
+            float HorizontalMouseMovement = eventMouseMotion.Relative.Y;
+            LocalCameraMount.RotateX(Mathf.DegToRad(-HorizontalMouseMovement * MouseSensitivity));
             
         }
     }
@@ -68,12 +68,6 @@ public partial class NetworkedMovement : CharacterBody3D
         {
             _targetVelocity.Y -= Gravity * (float)delta;
         }
-
-        //jump
-	//direction = Input.get_vector("move_right", "move_left", "move_down", "move_up")
-	//if Input.is_action_just_pressed("jump"):
-	//if Input.is_action_just_pressed("ui_accept") and is_on_floor() and not direction:
-		//velocity.y = JUMP_VELOCITY
 
         if(Input.IsActionJustPressed("jump") && IsOnFloor())
         {
@@ -98,16 +92,6 @@ public partial class NetworkedMovement : CharacterBody3D
         Velocity = _targetVelocity;
         MoveAndSlide();
 
-        //EmitSignal(SignalName.NetworkPlayerMoved, Position);
-
-        
-        //REPLICATE MY POSITION ONF ALL OTHER PEERS
-        //this happens too often. We might want to limit this to a time based function depending on what server tickreate we want
-        //this is also vulerable and p2p
-
-        //We can do this to reduce the amount of calls but we might not want too
-        //if(!InputDirection.IsZeroApprox() || !Input.GetLastMouseVelocity().IsZeroApprox())
-        
         foreach (var Peer in Multiplayer.GetPeers())
         {
             if(Peer == NetworkId)
