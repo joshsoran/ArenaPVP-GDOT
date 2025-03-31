@@ -133,7 +133,7 @@ public partial class Network : Node
         AddChild(NetworkedPlayerInstance);
         ConnectedPlayers[Id] = NetworkedPlayerInstance;
         //we adjust the position so there isn't fuckery with spawning in the EXACT same spot at the same time
-        NetworkedPlayerInstance.Position += new Vector3(GD.RandRange(-3, 3), 0, GD.RandRange(-3, 3));
+        NetworkedPlayerInstance.Position += new Vector3(ConnectedPlayers.Count*2, 0, 0);
     }
 
 }

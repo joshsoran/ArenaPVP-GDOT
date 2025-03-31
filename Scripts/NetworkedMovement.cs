@@ -23,6 +23,10 @@ public partial class NetworkedMovement : CharacterBody3D
     private float Gravity = 9.81f;
 
     public Vector3 _targetVelocity = Vector3.Zero;
+
+    public Vector2 InputDirection = Vector2.Zero;
+
+    public bool bJustJumped = false;
     
     public override void _Ready()
     {
@@ -59,14 +63,25 @@ public partial class NetworkedMovement : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
-        if(NetworkId != Multiplayer.GetUniqueId() || NetworkId == 1)
+        if(NetworkId == 1)
         {
             return;
         }
 
-        Vector2 InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
-        bool bJustJumped = Input.IsActionJustPressed("jump");
         ProcessMovement(InputDirection, bJustJumped, delta);
+
+        if(NetworkId != Multiplayer.GetUniqueId())
+        {
+            return;
+        }
+
+        InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
+        bJustJumped = Input.IsActionJustPressed("jump");
+
+
+        //process movement using variables from the server if we are replicating and locally if we are not.
+        //maybe we can always use network variables
+        
         //rpc this to everyone and run locally
 
         foreach (var Peer in Multiplayer.GetPeers())
@@ -76,7 +91,7 @@ public partial class NetworkedMovement : CharacterBody3D
             {
                 continue;
             }
-            RpcId(Peer, MethodName.ProcessMovement, InputDirection, bJustJumped, delta);
+            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped);
 
             if(Peer == NetworkId)
             {
@@ -84,9 +99,16 @@ public partial class NetworkedMovement : CharacterBody3D
             }
             RpcId(Peer, MethodName.ReplicateLook, Rotation);
             
+            
         }
 
+    }
 
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped)
+    {
+        InputDirection = _InputDirection;
+        bJustJumped = _bJustJumped;
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
@@ -95,8 +117,10 @@ public partial class NetworkedMovement : CharacterBody3D
         Rotation = LookRotation;
     }
 
+    //We should probably implement a timer which checks the server side position of the palyer and updated it from network.cs
+
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    public void ProcessMovement(Vector2 InputDirection, bool bJustJumped, double delta)
+    public void ProcessMovement(Vector2 _InputDirection, bool _bJustJumped, double delta)
     {
                 //gravity
         if(!IsOnFloor())
@@ -104,12 +128,12 @@ public partial class NetworkedMovement : CharacterBody3D
             _targetVelocity.Y -= Gravity * (float)delta;
         }
 
-        if(bJustJumped && IsOnFloor())
+        if(_bJustJumped && IsOnFloor())
         {
             _targetVelocity.Y = JumpVelocity;
         }
 
-        Vector3 Direction = (Transform.Basis * new Vector3(InputDirection.X, 0, InputDirection.Y)).Normalized();
+        Vector3 Direction = (Transform.Basis * new Vector3(_InputDirection.X, 0, _InputDirection.Y)).Normalized();
 
         if(Direction.IsZeroApprox())
         {
@@ -123,6 +147,7 @@ public partial class NetworkedMovement : CharacterBody3D
         }
 
         Velocity = _targetVelocity;
+        //we should only replicated the direction and then run the velocity calc and moveandslide lcoally
         MoveAndSlide();
     }
 
