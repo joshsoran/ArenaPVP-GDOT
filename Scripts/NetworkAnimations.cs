@@ -10,8 +10,8 @@ public partial class NetworkAnimations : Node
     private AnimationTree PlayerAnimationTree;
 
     Vector2 CurrentVelocity = Vector2.Zero;
-    float StrafeAcceleration = 4.0f;
-    float TargetSpeed;
+    float StrafeAcceleration = 6.5f; // Animation blend timer essentially
+    private Vector2 TargetSpeed;
     int LocalNetworkId;
 
     //we should probably subscribe to the onconnect event and do all of this _ready stuff there.
@@ -33,7 +33,7 @@ public partial class NetworkAnimations : Node
             return;
         }
 
-        AnimatePlayerMovement();
+        AnimatePlayerMovement(delta);
 
     }
 
@@ -42,15 +42,22 @@ public partial class NetworkAnimations : Node
     //this isn't really that important to be server led anyway
     //still good to practice good standards so our code doesn't turn into a rats nest
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    public void AnimatePlayerMovement()
+    public void AnimatePlayerMovement(double delta)
     {
         //we might be already doing some of this in ourt movement controller. It's worth looking into consolidating this somwhow
         if(Player.IsOnFloor())
         {
             PlayerAnimationTree.Set("parameters/Transition/transition_request", "Grounded");
-            Vector3 StrafeDirection3 = (Vector3)Player.Get("_targetVelocity");
-            Vector2 StrafeDirection2 = new Vector2(StrafeDirection3.X, StrafeDirection3.Z);
-            PlayerAnimationTree.Set("parameters/Locomotion/blend_position", -StrafeDirection2);
+
+            TargetSpeed = ((Vector2)Player.Get("InputDirection")).Normalized();
+            CurrentVelocity = CurrentVelocity.MoveToward(-TargetSpeed, StrafeAcceleration * (float)delta);
+            Vector2 strafeInput = new Vector2(CurrentVelocity.X, -CurrentVelocity.Y);
+            PlayerAnimationTree.Set("parameters/Locomotion/blend_position", strafeInput);
+
+
+            // Vector3 StrafeDirection3 = (Vector3)Player.Get("_targetVelocity");
+            // Vector2 StrafeDirection2 = new Vector2(StrafeDirection3.X, StrafeDirection3.Y);
+            // PlayerAnimationTree.Set("parameters/Locomotion/blend_position", -StrafeDirection2);
 
             if(Input.IsActionJustPressed("jump"))
             {

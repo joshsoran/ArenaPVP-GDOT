@@ -12,7 +12,7 @@ public partial class Network : Node
     public int MaxClients = 20;
 
     [Export]
-    public String DefaultServerIP = "94.174.205.107";
+    public String DefaultServerIP = "127.0.0.1"; //94.174.205.107
 
     private int _playersLoaded = 0;
 
