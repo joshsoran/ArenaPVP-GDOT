@@ -4,30 +4,39 @@ using System;
 
 public partial class NetworkedMovement : CharacterBody3D
 {
-
+    // Exports
     [Export]
     public float Speed = 5.0f;
-
     [Export]
     public float JumpVelocity = 4.5f;
-
     [Export]
     public float MouseSensitivity = 0.1f;
-    
     [Export]
     public Camera3D LocalCamera;
     [Export]
     public Node3D LocalCameraMount;
+
+    // Publics
     public int NetworkId;
-
-    private float Gravity = 9.81f;
-
     public Vector3 _targetVelocity = Vector3.Zero;
-
     public Vector2 InputDirection = Vector2.Zero;
+    public bool bJustJumped = false;    
+    // Privates
+    private float Gravity = 9.81f;
+    private Area3D _area3D; // for weapon detection
 
-    public bool bJustJumped = false;
-    
+
+    // weapon collision detection
+    private void OnBodyEntered(Node3D body)
+    {
+        // if enemy
+        if(body.IsInGroup("Enemy"))
+        {
+            body.Call("td_takeDamage", 10);
+            GD.Print($"Enemy HP: {body.Get("td_current_health")}");
+        }
+    }
+
     public override void _Ready()
     {
         if(Multiplayer.IsServer())
@@ -36,12 +45,14 @@ public partial class NetworkedMovement : CharacterBody3D
         }
 
         //Input.MouseMode = Input.MouseModeEnum.Captured;
-
         if(NetworkId == Multiplayer.GetUniqueId())
         {
             GD.Print("Local Camera Set");
             LocalCamera.Current = true;
         }
+
+        _area3D = GetNode<Area3D>("knight/Node/Area3D"); // Adjust path if necessary
+        _area3D.BodyEntered += OnBodyEntered;
     }
 
     public override void _Input(InputEvent @event)

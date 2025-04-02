@@ -68,5 +68,11 @@ public partial class NetworkAnimations : Node
         {
             PlayerAnimationTree.Set("parameters/Transition/transition_request", "Fall");
         }
+
+        // Left click attack
+        if(Input.IsActionJustPressed("left_click"))
+        {
+            PlayerAnimationTree.Set("parameters/oneshot_attack/request", 1);
+        }
     }
 }
