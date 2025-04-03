@@ -26,6 +26,7 @@ _data = {
 point_count = 20
 
 [node name="Main" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0193062, 0.0547199, -0.0252476)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_jyhfs")
@@ -83,7 +84,7 @@ size = Vector3(6.2, 1.8, 0.3)
 [node name="Network" type="Node3D" parent="." node_paths=PackedStringArray("PlayerSpawnPath")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.50476, 0)
 script = ExtResource("2_0wfyh")
-NetworkedPlayer = ExtResource("2_sugp2")
+NetworkedPlayerScene = ExtResource("2_sugp2")
 PlayerSpawnPath = NodePath("../Path3D")
 
 [node name="Path3D" type="Path3D" parent="."]

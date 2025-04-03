@@ -1,8 +1,10 @@
 using Godot;
 using Godot.NativeInterop;
 using System;
+using System.Linq;
+using System.Reflection;
 
-public partial class NetworkedMovement : CharacterBody3D
+public partial class NetworkedPlayer : CharacterBody3D
 {
     // Exports
     [Export]
@@ -20,11 +22,12 @@ public partial class NetworkedMovement : CharacterBody3D
     public int NetworkId;
     public Vector3 _targetVelocity = Vector3.Zero;
     public Vector2 InputDirection = Vector2.Zero;
-    public bool bJustJumped = false;    
+    public bool bJustJumped = false;   
+    public Network NetworkNode; 
     // Privates
     private float Gravity = 9.81f;
     private Area3D _area3D; // for weapon detection
-
+    private Godot.Collections.Dictionary<int, Vector3> PeerPositionsToResync = new Godot.Collections.Dictionary<int, Vector3>();
 
     // weapon collision detection
     private void OnBodyEntered(Node3D body)
@@ -45,19 +48,31 @@ public partial class NetworkedMovement : CharacterBody3D
         }
 
         //Input.MouseMode = Input.MouseModeEnum.Captured;
+
+        //This is bad bc it relies on the network node being a parent of all of our networkedplayers
+        //We will prolly find a way to do this better later. Maybe an rpc form the network can do this
+        NetworkNode = GetParent<Network>();
+
         if(NetworkId == Multiplayer.GetUniqueId())
         {
-            GD.Print("Local Camera Set");
             LocalCamera.Current = true;
+            bIsInitialized = true;
+            InitializeOnServer();
         }
 
         _area3D = GetNode<Area3D>("knight/Node/Area3D"); // Adjust path if necessary
         _area3D.BodyEntered += OnBodyEntered;
     }
 
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    public void SetNetworkNode(Network _NetworkNode)
+    {
+        NetworkNode = _NetworkNode;
+    }
+
     public override void _Input(InputEvent @event)
     {
-        if(NetworkId != Multiplayer.GetUniqueId())
+        if(NetworkId != Multiplayer.GetUniqueId() || Multiplayer.IsServer())
         {
             return;
         }
@@ -74,12 +89,12 @@ public partial class NetworkedMovement : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
-        if(NetworkId == 1)
-        {
+        ProcessMovement(InputDirection, bJustJumped, delta);
+
+        if(Multiplayer.IsServer())
+        {                
             return;
         }
-
-        ProcessMovement(InputDirection, bJustJumped, delta);
 
         if(NetworkId != Multiplayer.GetUniqueId())
         {
@@ -88,31 +103,22 @@ public partial class NetworkedMovement : CharacterBody3D
 
         InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
         bJustJumped = Input.IsActionJustPressed("jump");
-
-
-        //process movement using variables from the server if we are replicating and locally if we are not.
-        //maybe we can always use network variables
-        
-        //rpc this to everyone and run locally
-
         foreach (var Peer in Multiplayer.GetPeers())
         {
 
-            if(Peer == 1)
-            {
+            if(Multiplayer.IsServer())
+            {                
                 continue;
             }
-            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped);
-
+            
             if(Peer == NetworkId)
             {
                 continue;
             }
-            RpcId(Peer, MethodName.ReplicateLook, Rotation);
-            
-            
-        }
 
+            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped);
+            RpcId(Peer, MethodName.ReplicateLook, Rotation);
+        }
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
@@ -128,12 +134,10 @@ public partial class NetworkedMovement : CharacterBody3D
         Rotation = LookRotation;
     }
 
-    //We should probably implement a timer which checks the server side position of the palyer and updated it from network.cs
-
-    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
     public void ProcessMovement(Vector2 _InputDirection, bool _bJustJumped, double delta)
     {
-                //gravity
+
+        //gravity
         if(!IsOnFloor())
         {
             _targetVelocity.Y -= Gravity * (float)delta;
@@ -158,8 +162,45 @@ public partial class NetworkedMovement : CharacterBody3D
         }
 
         Velocity = _targetVelocity;
-        //we should only replicated the direction and then run the velocity calc and moveandslide lcoally
         MoveAndSlide();
+
+        if(Multiplayer.IsServer())
+        {
+            return;
+        }
+
+        if(!GetRealVelocity().IsZeroApprox() || !_InputDirection.IsZeroApprox() || _bJustJumped)
+        {
+            NetworkNode.RpcId(1, Network.MethodName.ValidateClientPostionAgainstServer, NetworkId, Position);
+        }
+
+    }
+
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
+    public void UpdateOutOfSyncClientPosition(int OutOfSyncClientId, Vector3 ServerPosition)
+    {
+        GD.Print("replicated client behind server");
+        //PeerPositionsToResync[OutOfSyncClientId] = ServerPosition;
+        if(NetworkId == OutOfSyncClientId)
+        {
+            Position = ServerPosition;
+        }
+        
+
+    }
+
+    private void InitializeOnServer()
+    {  
+        if(NetworkNode == null)
+        {
+            GD.PrintErr($"NetworkNode is null in InitializeOnServer() When called on peer {NetworkId}");
+            return;
+        }
+        //let the server know we are ready for gaming
+        NetworkNode.RpcId(1, Network.MethodName.RecievePlayerInit, NetworkId, bIsInitialized);
+        //Run an initial check for our server position because of spawning fuckery
+        //deactivated for now but keeping it for future debugging
+        //NetworkNode.RpcId(1, Network.MethodName.ValidateClientPostionAgainstServer, Multiplayer.GetUniqueId(), Position);
     }
 
 }
