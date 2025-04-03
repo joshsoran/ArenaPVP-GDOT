@@ -123,14 +123,14 @@ public partial class Network : Node3D
 
         ConnectedPlayers[Id] = NetworkedPlayerInstance;
 
-        foreach (int PeerId in Multiplayer.GetPeers())
+        foreach (var ConnectedPlayer in ConnectedPlayers)
         {
-            RpcId(Id, MethodName.SpawnPlayersLocally, PeerId, NetworkedPlayerInstance.Position);
-            if(PeerId == Id)
+            RpcId(Id, MethodName.SpawnPlayersLocally, ConnectedPlayer.Key, NetworkedPlayerInstance.Position);
+            if(ConnectedPlayer.Key == Id)
             {
                 continue;
             }
-            RpcId(PeerId, MethodName.SpawnPlayersLocally, Id, NetworkedPlayerInstance.Position);
+            RpcId(ConnectedPlayer.Key, MethodName.SpawnPlayersLocally, Id, NetworkedPlayerInstance.Position);
         }
 
         GD.Print($"Client ID:{Id} added to server list");
