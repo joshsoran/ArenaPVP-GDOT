@@ -33,11 +33,19 @@ public partial class NetworkedPlayer : CharacterBody3D
     // weapon collision detection
     private void OnBodyEntered(Node3D body)
     {
-        // if enemy
+        // If not server
+        if(!Multiplayer.IsServer())
+        {
+            return;
+        }
+
+        // If enemy
         if(body.IsInGroup("Enemy"))
         {
-            body.Call("td_takeDamage", 10);
-            GD.Print($"Enemy HP: {body.Get("td_current_health")}");
+            // body.Call("td_takeDamage", 10);
+            // GD.Print($"Enemy HP: {body.Get("td_current_health")}");
+            body.Rpc(TargetDummy.MethodName.TakeDamage, 10);
+            GD.Print($"Enemy HP: {body.Get("currentHealth")}");
         }
     }
 
@@ -45,6 +53,8 @@ public partial class NetworkedPlayer : CharacterBody3D
     {
         if(Multiplayer.IsServer())
         {
+            _area3D = GetNode<Area3D>("knight/Node/Area3D"); // Adjust path if necessary
+            _area3D.BodyEntered += OnBodyEntered;
             return;
         }
 
@@ -60,9 +70,6 @@ public partial class NetworkedPlayer : CharacterBody3D
             bIsInitialized = true;
             InitializeOnServer();
         }
-
-        _area3D = GetNode<Area3D>("knight/Node/Area3D"); // Adjust path if necessary
-        _area3D.BodyEntered += OnBodyEntered;
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]

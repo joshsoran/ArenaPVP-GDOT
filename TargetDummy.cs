@@ -5,9 +5,9 @@ public partial class TargetDummy : CharacterBody3D
 {
 	// Exports
 	[Export]
-	public double td_max_health = 100;
+	public double maxHealth = 100;
 	[Export]
-	public double td_current_health;
+	public double currentHealth;
 
 	// Publics
 
@@ -18,18 +18,19 @@ public partial class TargetDummy : CharacterBody3D
 	public override void _Ready()
 	{
 		// Init current hp as max hp
-		td_current_health = td_max_health;
+		currentHealth = maxHealth;
 	}
 
 	// Take damage function
-	public void td_takeDamage(double damage)
+	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
+	public void TakeDamage(double damage)
 	{
 		// prevent negative HP
-		if(td_current_health < damage){
-			damage = td_current_health;
+		if(currentHealth < damage){
+			damage = currentHealth;
 		}
 		// subtract damage from current hp
-		td_current_health -= damage;
+		currentHealth -= damage;
 
 		// VISUAL - Subtract damage from HP bar
 		GetNode<ProgressBar>("SubViewport/hp_bar").Value -= damage;
