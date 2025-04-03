@@ -22,7 +22,8 @@ public partial class NetworkedPlayer : CharacterBody3D
     public int NetworkId;
     public Vector3 _targetVelocity = Vector3.Zero;
     public Vector2 InputDirection = Vector2.Zero;
-    public bool bJustJumped = false;   
+    public bool bJustJumped = false;
+    public bool bIsInitialized = false;   
     public Network NetworkNode; 
     // Privates
     private float Gravity = 9.81f;
