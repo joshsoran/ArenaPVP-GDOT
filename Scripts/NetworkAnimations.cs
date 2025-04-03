@@ -4,7 +4,7 @@ using System;
 public partial class NetworkAnimations : Node
 {
     [Export]
-    private CharacterBody3D Player;
+    private NetworkedPlayer Player;
 
     [Export]
     private AnimationTree PlayerAnimationTree;
@@ -49,7 +49,7 @@ public partial class NetworkAnimations : Node
         {
             PlayerAnimationTree.Set("parameters/Transition/transition_request", "Grounded");
 
-            TargetSpeed = ((Vector2)Player.Get("InputDirection")).Normalized();
+            TargetSpeed = Player.InputDirection.Normalized();
             CurrentVelocity = CurrentVelocity.MoveToward(-TargetSpeed, StrafeAcceleration * (float)delta);
             Vector2 strafeInput = new Vector2(CurrentVelocity.X, -CurrentVelocity.Y);
             PlayerAnimationTree.Set("parameters/Locomotion/blend_position", strafeInput);
@@ -59,7 +59,7 @@ public partial class NetworkAnimations : Node
             // Vector2 StrafeDirection2 = new Vector2(StrafeDirection3.X, StrafeDirection3.Y);
             // PlayerAnimationTree.Set("parameters/Locomotion/blend_position", -StrafeDirection2);
 
-            if(Input.IsActionJustPressed("jump"))
+            if(Player.bJustJumped)
             {
                 PlayerAnimationTree.Set("parameters/OneShot/request", 1);
             }
@@ -70,7 +70,7 @@ public partial class NetworkAnimations : Node
         }
 
         // Left click attack
-        if(Input.IsActionJustPressed("left_click"))
+        if(Player.bJustLeftClicked)
         {
             PlayerAnimationTree.Set("parameters/oneshot_attack/request", 1);
         }

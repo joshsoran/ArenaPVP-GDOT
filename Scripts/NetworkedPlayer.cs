@@ -23,6 +23,7 @@ public partial class NetworkedPlayer : CharacterBody3D
     public Vector3 _targetVelocity = Vector3.Zero;
     public Vector2 InputDirection = Vector2.Zero;
     public bool bJustJumped = false;
+    public bool bJustLeftClicked = false;
     public bool bIsInitialized = false;   
     public Network NetworkNode; 
     // Privates
@@ -111,6 +112,7 @@ public partial class NetworkedPlayer : CharacterBody3D
 
         InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
         bJustJumped = Input.IsActionJustPressed("jump");
+        bJustLeftClicked = Input.IsActionJustPressed("left_click");
         foreach (var Peer in Multiplayer.GetPeers())
         {
 
@@ -124,14 +126,15 @@ public partial class NetworkedPlayer : CharacterBody3D
                 continue;
             }
 
-            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped);
+            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped, bJustLeftClicked);
             RpcId(Peer, MethodName.ReplicateLook, Rotation);
         }
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped)
+    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped, bool _bJustLeftClicked)
     {
+        bJustLeftClicked =  _bJustLeftClicked;
         InputDirection = _InputDirection;
         bJustJumped = _bJustJumped;
     }
