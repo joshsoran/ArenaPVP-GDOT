@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://g7c0d5cudseu"]
+
+[ext_resource type="Script" uid="uid://dbtny32w5oixm" path="res://Scripts/AbilityStealth.cs" id="1_4hvgt"]
+
+[node name="AbilityStealth" type="Node3D"]
+script = ExtResource("1_4hvgt")
+
+[node name="gaming" type="Node3D" parent="."]

@@ -110,7 +110,7 @@ public partial class Network : Node3D
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
     private void AddPlayerToServerList(int Id)
     {
-        NetworkedPlayer NetworkedPlayerInstance = (NetworkedPlayer)NetworkedPlayerScene.Instantiate();
+        NetworkedPlayer NetworkedPlayerInstance = NetworkedPlayerScene.Instantiate<NetworkedPlayer>();
         NetworkedPlayerInstance.Set("NetworkId", Id);
         GD.Print($"Spawning Player with ID: {Id}");
         AddChild(NetworkedPlayerInstance);
@@ -141,7 +141,7 @@ public partial class Network : Node3D
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
     private void SpawnPlayersLocally(int Id, Vector3 SpawnLocation)
     {
-        NetworkedPlayer NetworkedPlayerInstance = (NetworkedPlayer)NetworkedPlayerScene.Instantiate();
+        NetworkedPlayer NetworkedPlayerInstance = NetworkedPlayerScene.Instantiate<NetworkedPlayer>();
         NetworkedPlayerInstance.Set("NetworkId", Id);
         AddChild(NetworkedPlayerInstance);
         NetworkedPlayerInstance.Position = SpawnLocation;
@@ -161,7 +161,7 @@ public partial class Network : Node3D
         float ZDiff = Math.Abs(AskingClientPositionServer.Z - AskingClientPositionLocal.Z);
         if(XDiff > Tolerance || YDiff > Tolerance || ZDiff > Tolerance)
         {
-            GD.Print($"Peer {AskingClientId} is off by {XDiff}, {YDiff}, {ZDiff}");
+            //GD.Print($"Peer {AskingClientId} is off by {XDiff}, {YDiff}, {ZDiff}");
             //ConnectedPlayers[AskingClientId].RpcId(AskingClientId, NetworkedPlayer.MethodName.UpdateOutOfSyncClientPosition, AskingClientId, AskingClientPositionServer);
             ConnectedPlayers[AskingClientId].Rpc(NetworkedPlayer.MethodName.UpdateOutOfSyncClientPosition, AskingClientId, AskingClientPositionServer);
         }
@@ -171,6 +171,6 @@ public partial class Network : Node3D
     private void RecievePlayerInit(int CallingPlayerId, bool bIsInitialized)
     {
         ConnectedPlayers[CallingPlayerId].bIsInitialized = bIsInitialized;
-        GD.Print($"Initialization {bIsInitialized} for peer {CallingPlayerId} Recieved");
+        //GD.Print($"Initialization {bIsInitialized} for peer {CallingPlayerId} Recieved");
     }
 }

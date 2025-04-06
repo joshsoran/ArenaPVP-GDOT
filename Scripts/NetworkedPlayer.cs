@@ -30,6 +30,8 @@ public partial class NetworkedPlayer : CharacterBody3D
     private float Gravity = 9.81f;
     private Area3D _area3D; // for weapon detection
     private Godot.Collections.Dictionary<int, Vector3> PeerPositionsToResync = new Godot.Collections.Dictionary<int, Vector3>();
+    [Export]
+    private AbilityController playerAbilityController;
 
     // weapon collision detection
     private void OnBodyEntered(Node3D body)
@@ -43,10 +45,8 @@ public partial class NetworkedPlayer : CharacterBody3D
         // If enemy
         if(body.IsInGroup("Enemy"))
         {
-            // body.Call("td_takeDamage", 10);
-            // GD.Print($"Enemy HP: {body.Get("td_current_health")}");
             body.Rpc(TargetDummy.MethodName.TakeDamage, 10);
-            GD.Print($"Enemy HP: {body.Get("currentHealth")}");
+            //GD.Print($"Enemy HP: {body.Get("currentHealth")}");
         }
     }
 
@@ -71,6 +71,8 @@ public partial class NetworkedPlayer : CharacterBody3D
             bIsInitialized = true;
             InitializeOnServer();
         }
+
+        //playerAbilityController.PostPlayerLoad();
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
@@ -99,7 +101,6 @@ public partial class NetworkedPlayer : CharacterBody3D
     public override void _PhysicsProcess(double delta)
     {
         ProcessMovement(InputDirection, bJustJumped, delta);
-
         if(Multiplayer.IsServer())
         {                
             return;
@@ -113,6 +114,19 @@ public partial class NetworkedPlayer : CharacterBody3D
         InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
         bJustJumped = Input.IsActionJustPressed("jump");
         bJustLeftClicked = Input.IsActionJustPressed("left_click");
+        bool bAbilityOnePressed = Input.IsActionJustPressed("ability_one");
+        
+        //this is temprary. I need to do the todo below and move all this input stuff somewhere else so there is a standardized way or wirting and reading inputs
+        var playerAbilities = playerAbilityController.GetChildren();
+        //AbilityBase FirstAbility = playerAbilities.ElementAt<AbilityBase>(0);
+        Node firstAbilityNode = playerAbilities.ElementAt(0);
+        AbilityBase firstAbility = (AbilityBase)firstAbilityNode;
+        if(firstAbility != null)
+        {
+            firstAbility.bAbilityInputPressed = bAbilityOnePressed;
+        }
+        //end temp
+
         foreach (var Peer in Multiplayer.GetPeers())
         {
 
@@ -125,15 +139,30 @@ public partial class NetworkedPlayer : CharacterBody3D
             {
                 continue;
             }
-
-            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped, bJustLeftClicked);
+            
+            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped, bJustLeftClicked, bAbilityOnePressed);
             RpcId(Peer, MethodName.ReplicateLook, Rotation);
         }
     }
 
+    //TODO[@cameron] Move input replication to it's own node and script
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped, bool _bJustLeftClicked)
+    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped, bool _bJustLeftClicked, bool _bAbilityOnePressed)
     {
+        //This could be costly because of get children
+        //we might want this in it's own replicated abilities method
+        //I tried storing laoded abilties  in the ability controller but I  can't get it to work
+        //we could prolly also make this list in a post laod fucntion.
+        //I'm not putting too much thought into it rn. for later
+        //TODO[@Cameron]: make that work better faster and stronger
+        var playerAbilities = playerAbilityController.GetChildren();
+        //AbilityBase FirstAbility = playerAbilities.ElementAt<AbilityBase>(0);
+        Node firstAbilityNode = playerAbilities.ElementAt(0);
+        AbilityBase firstAbility = (AbilityBase)firstAbilityNode;
+        if(firstAbility != null)
+        {
+            firstAbility.bAbilityInputPressed = _bAbilityOnePressed;
+        }
         bJustLeftClicked =  _bJustLeftClicked;
         InputDirection = _InputDirection;
         bJustJumped = _bJustJumped;
@@ -190,7 +219,7 @@ public partial class NetworkedPlayer : CharacterBody3D
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
     public void UpdateOutOfSyncClientPosition(int OutOfSyncClientId, Vector3 ServerPosition)
     {
-        GD.Print("replicated client behind server");
+        //GD.Print("replicated client behind server");
         //PeerPositionsToResync[OutOfSyncClientId] = ServerPosition;
         if(NetworkId == OutOfSyncClientId)
         {
