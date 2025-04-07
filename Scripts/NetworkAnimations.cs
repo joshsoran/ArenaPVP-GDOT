@@ -12,6 +12,8 @@ public partial class NetworkAnimations : Node
     Vector2 CurrentVelocity = Vector2.Zero;
     float StrafeAcceleration = 6.5f; // Animation blend timer essentially
     private Vector2 TargetSpeed;
+    private AnimationNodeOneShot AttackOneShot; // Track attack node
+
     int LocalNetworkId;
 
     //we should probably subscribe to the onconnect event and do all of this _ready stuff there.
@@ -19,6 +21,11 @@ public partial class NetworkAnimations : Node
     {
         LocalNetworkId = Multiplayer.GetUniqueId();
         GD.Print($"network animdation id: {LocalNetworkId}");
+
+        // Animation tree info
+        //PlayerAnimationTree = GetNode<AnimationTree>("AnimationTree");
+        // Get the actual OneShot node from the AnimationTree
+        AttackOneShot = (AnimationNodeOneShot)PlayerAnimationTree.Get("parameters/oneshot_attack");
     }
 
     public override void _Process(double delta)
@@ -72,7 +79,22 @@ public partial class NetworkAnimations : Node
         // Left click attack
         if(Player.bJustLeftClicked)
         {
-            PlayerAnimationTree.Set("parameters/oneshot_attack/request", 1);
+            bool isActive = (bool)PlayerAnimationTree.Get("parameters/oneshot_attack/active");
+            if (!isActive)
+            {
+                PlayerAnimationTree.Set("parameters/oneshot_attack/request", 1);
+                Player._canDealDamage = true;
+                //GD.Print($"Damage: {Player._canDealDamage}");
+            }
+        }
+        else
+        {
+            bool isActive = (bool)PlayerAnimationTree.Get("parameters/oneshot_attack/active");
+            if(!isActive) // if animation stopped playing, make sure player can't do anymore damage
+            {
+                Player._canDealDamage = false;
+                //GD.Print($"Damage: {Player._canDealDamage}");
+            }   
         }
     }
 }

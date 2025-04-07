@@ -17,6 +17,8 @@ public partial class NetworkedPlayer : CharacterBody3D
     public Camera3D LocalCamera;
     [Export]
     public Node3D LocalCameraMount;
+    [Export]
+    private AbilityController playerAbilityController;
 
     // Publics
     public int NetworkId;
@@ -26,28 +28,31 @@ public partial class NetworkedPlayer : CharacterBody3D
     public bool bJustLeftClicked = false;
     public bool bIsInitialized = false;   
     public Network NetworkNode; 
+    public bool _canDealDamage = false; // prevent weapon from over-dealing damage
+
     // Privates
     private float Gravity = 9.81f;
     private Area3D _area3D; // for weapon detection
+
     private Godot.Collections.Dictionary<int, Vector3> PeerPositionsToResync = new Godot.Collections.Dictionary<int, Vector3>();
-    [Export]
-    private AbilityController playerAbilityController;
+    
 
     // weapon collision detection
     private void OnBodyEntered(Node3D body)
     {
+        // Return conditions
         // If not server
-        if(!Multiplayer.IsServer())
-        {
-            return;
-        }
+        if(!Multiplayer.IsServer()) return;
+        // if can't deal damage
+        if(!_canDealDamage) return;
+        // If not enemy
+        if(!body.IsInGroup("Enemy")) return;
 
-        // If enemy
-        if(body.IsInGroup("Enemy"))
-        {
-            body.Rpc(TargetDummy.MethodName.TakeDamage, 10);
-            //GD.Print($"Enemy HP: {body.Get("currentHealth")}");
-        }
+        // Deal damage
+        body.Rpc(TargetDummy.MethodName.TakeDamage, 10);
+        _canDealDamage = false; 
+
+        //GD.Print($"Enemy HP: {body.Get("currentHealth")}");
     }
 
     public override void _Ready()
