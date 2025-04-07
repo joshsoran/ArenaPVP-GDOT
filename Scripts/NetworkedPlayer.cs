@@ -54,7 +54,7 @@ public partial class NetworkedPlayer : CharacterBody3D
     {
         if(Multiplayer.IsServer())
         {
-            _area3D = GetNode<Area3D>("knight/Node/Area3D"); // Adjust path if necessary
+            _area3D = GetNode<Area3D>("knight/Node/Skeleton3D/BoneAttachment3D/Area3D"); // Adjust path if necessary
             _area3D.BodyEntered += OnBodyEntered;
             return;
         }
