@@ -5,9 +5,6 @@ using System.Threading.Tasks;
 
 public partial class AbilityStealth : AbilityBase
 {
-
-    public override String abilityInput { get; set; } = "Ability1";
-
     public override bool bHasCooldown { get; set; } = true;
     public override double cooldownTime { get; set; } = 5.0;
 

@@ -3,8 +3,6 @@ using System;
 
 public partial class AbilityBase : Node3D
 {
-    public virtual String abilityInput { get; set; }
-
     public virtual bool bHasCooldown { get; set; } = true;
     private Timer cooldownTimer = new Timer();
     public virtual double cooldownTime { get; set; } = 1.0;
