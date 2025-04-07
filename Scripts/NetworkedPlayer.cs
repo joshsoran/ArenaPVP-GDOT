@@ -115,17 +115,13 @@ public partial class NetworkedPlayer : CharacterBody3D
         bJustJumped = Input.IsActionJustPressed("jump");
         bJustLeftClicked = Input.IsActionJustPressed("left_click");
         bool bAbilityOnePressed = Input.IsActionJustPressed("ability_one");
-        
-        //this is temprary. I need to do the todo below and move all this input stuff somewhere else so there is a standardized way or wirting and reading inputs
-        var playerAbilities = playerAbilityController.GetChildren();
-        //AbilityBase FirstAbility = playerAbilities.ElementAt<AbilityBase>(0);
-        Node firstAbilityNode = playerAbilities.ElementAt(0);
-        AbilityBase firstAbility = (AbilityBase)firstAbilityNode;
+
+        var playerAbilities = playerAbilityController.loadedAbilities;
+        AbilityBase firstAbility = playerAbilities.ElementAt<AbilityBase>(0);
         if(firstAbility != null)
         {
             firstAbility.bAbilityInputPressed = bAbilityOnePressed;
         }
-        //end temp
 
         foreach (var Peer in Multiplayer.GetPeers())
         {
@@ -149,16 +145,8 @@ public partial class NetworkedPlayer : CharacterBody3D
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
     public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped, bool _bJustLeftClicked, bool _bAbilityOnePressed)
     {
-        //This could be costly because of get children
-        //we might want this in it's own replicated abilities method
-        //I tried storing laoded abilties  in the ability controller but I  can't get it to work
-        //we could prolly also make this list in a post laod fucntion.
-        //I'm not putting too much thought into it rn. for later
-        //TODO[@Cameron]: make that work better faster and stronger
-        var playerAbilities = playerAbilityController.GetChildren();
-        //AbilityBase FirstAbility = playerAbilities.ElementAt<AbilityBase>(0);
-        Node firstAbilityNode = playerAbilities.ElementAt(0);
-        AbilityBase firstAbility = (AbilityBase)firstAbilityNode;
+        var playerAbilities = playerAbilityController.loadedAbilities;
+        AbilityBase firstAbility = playerAbilities.ElementAt<AbilityBase>(0);
         if(firstAbility != null)
         {
             firstAbility.bAbilityInputPressed = _bAbilityOnePressed;
