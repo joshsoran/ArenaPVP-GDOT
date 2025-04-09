@@ -11,6 +11,11 @@ public partial class AbilityBase : Node
     public Timer activeTimer = new Timer();
     public virtual double activeTime { get; set; } = 1.0;
 
+    //The time it takes for the ability to be cast
+    public virtual bool bHasCastingTime { get; set; } = false;
+    public Timer castingTimer = new Timer();
+    public virtual double castingTime { get; set; } = 0.5;
+
     public bool bAbilityInputPressed = false;
 
     private AbilityController localAbilityController;
@@ -46,19 +51,23 @@ public partial class AbilityBase : Node
             AddChild(activeTimer);
             ExecuteAbility += StartActiveCooldown;
         }
-        //we need an idea of casting time for varying strengths
+
+        if(bHasCastingTime)
+        {
+            castingTimer.WaitTime = castingTime;
+            castingTimer.OneShot = true;
+            AddChild(castingTimer);
+        }
 
     }
 
     public override void _Process(double delta)
     {
         
-        if(localAbilityController != null)
+        if(localAbilityController == null)
         {
-            if (localAbilityController.globalCooldownTimer.TimeLeft != 0.0)
-            {
-                return;
-            }
+            GD.PrintErr($"localAbilityController is null in {System.Reflection.MethodBase.GetCurrentMethod().Name}");
+            return;
         }
 
         if (!bAbilityInputPressed)
@@ -71,15 +80,32 @@ public partial class AbilityBase : Node
             return;
         }
 
-        StartAbility();
+        if(localAbilityController.abilityQueue.Contains(this) || localAbilityController.abilityQueue.Count >= 2)
+        {
+            return;
+        }
+        
+        localAbilityController.abilityQueue.Add(this);
+
+        //only start the queue processing if we added to it and it was empty before we did so
+        if(localAbilityController.abilityQueue.Count == 1)
+        {
+            localAbilityController.ProcessAbilityQueue();
+        }
+        
     }
 
-    private void StartAbility()
+    public void StartAbility()
     {
         EmitSignal(SignalName.ExecuteAbility);
-        //if ability goes twice it's because this is true for more than one _process tick
         bAbilityInputPressed = false;
-        localAbilityController.globalCooldownTimer.Start();
+
+        localAbilityController.abilityQueue.Remove(this);
+        localAbilityController.ProcessAbilityQueue();
+        if(bHasCastingTime)
+		{
+            castingTimer.Timeout -= StartAbility;
+        }
     }
 
     public void StartCooldown()

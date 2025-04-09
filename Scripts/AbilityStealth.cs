@@ -11,6 +11,9 @@ public partial class AbilityStealth : AbilityBase
 	public override bool bHasActiveTime { get; set; } = true;
 	public override double activeTime { get; set; } = 1.0;
 
+    public override bool bHasCastingTime { get; set; } = true;
+    public override double castingTime { get; set; } = 1.0;
+
 	public override void _Ready()
 	{
 		base._Ready();
