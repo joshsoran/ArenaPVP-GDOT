@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class AbilityBase : Node3D
+public partial class AbilityBase : Node
 {
     public virtual bool bHasCooldown { get; set; } = true;
     private Timer cooldownTimer = new Timer();
@@ -14,6 +14,8 @@ public partial class AbilityBase : Node3D
     public bool bAbilityInputPressed = false;
 
     private AbilityController localAbilityController;
+
+    public NetworkedPlayer owningPlayer;
 
     [Signal]
     public delegate void ExecuteAbilityEventHandler();
@@ -40,11 +42,11 @@ public partial class AbilityBase : Node3D
         if (bHasActiveTime)
         {
             activeTimer.WaitTime = activeTime;
-            cooldownTimer.OneShot = true;
+            activeTimer.OneShot = true;
             AddChild(activeTimer);
             ExecuteAbility += StartActiveCooldown;
         }
-        
+        //we need an idea of casting time for varying strengths
 
     }
 

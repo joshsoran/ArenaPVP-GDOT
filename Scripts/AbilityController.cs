@@ -13,7 +13,7 @@ public partial class AbilityController : Node3D
 	//Where if I actiavate an ability within the GCD then send it out as soon as the next one ends
 	//basically async funciton learning
 	public Timer globalCooldownTimer = new Timer();
-    private double globalCooldownTime = 1.0;
+	private double globalCooldownTime = 1.0;
 
 	public Godot.Collections.Array<AbilityBase> loadedAbilities = new Godot.Collections.Array<AbilityBase>();
 	
@@ -22,14 +22,20 @@ public partial class AbilityController : Node3D
 		base._Ready();
 
 		globalCooldownTimer.WaitTime = globalCooldownTime;
-        globalCooldownTimer.OneShot = true;
-        AddChild(globalCooldownTimer);
+		globalCooldownTimer.OneShot = true;
+		AddChild(globalCooldownTimer);
 
 		foreach (PackedScene ability in abilities)
 		{
 			
 			AbilityBase abilityInstance = ability.Instantiate<AbilityBase>();
 			AddChild(abilityInstance);
+			//again. using relationships like this is not a good idea
+			abilityInstance.owningPlayer = GetParent<NetworkedPlayer>();
+			if(abilityInstance.owningPlayer == null)
+			{
+				GD.PrintErr($"Ability Owner is null in {System.Reflection.MethodBase.GetCurrentMethod().Name}");
+			}
 			loadedAbilities.Add(abilityInstance);
 			//GD.Print($"Loaded Ability {abilityInstance.GetClass()}");
 		}

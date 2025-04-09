@@ -119,13 +119,20 @@ public partial class NetworkedPlayer : CharacterBody3D
         InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
         bJustJumped = Input.IsActionJustPressed("jump");
         bJustLeftClicked = Input.IsActionJustPressed("left_click");
+        
         bool bAbilityOnePressed = Input.IsActionJustPressed("ability_one");
-
         var playerAbilities = playerAbilityController.loadedAbilities;
         AbilityBase firstAbility = playerAbilities.ElementAt<AbilityBase>(0);
         if(firstAbility != null)
         {
             firstAbility.bAbilityInputPressed = bAbilityOnePressed;
+        }
+
+        bool bAbilityTwoPressed = Input.IsActionJustPressed("ability_two");
+        AbilityBase secondAbility = playerAbilities.ElementAt<AbilityBase>(1);
+        if(secondAbility != null)
+        {
+            secondAbility.bAbilityInputPressed = bAbilityTwoPressed;
         }
 
         foreach (var Peer in Multiplayer.GetPeers())
@@ -141,20 +148,26 @@ public partial class NetworkedPlayer : CharacterBody3D
                 continue;
             }
             
-            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped, bJustLeftClicked, bAbilityOnePressed);
+            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped, bJustLeftClicked, bAbilityOnePressed, bAbilityTwoPressed);
             RpcId(Peer, MethodName.ReplicateLook, Rotation);
         }
     }
 
     //TODO[@cameron] Move input replication to it's own node and script
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped, bool _bJustLeftClicked, bool _bAbilityOnePressed)
+    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped, bool _bJustLeftClicked, bool _bAbilityOnePressed, bool _bAbilityTwoPressed)
     {
         var playerAbilities = playerAbilityController.loadedAbilities;
+        //we should solve this repetition with a recursive function
         AbilityBase firstAbility = playerAbilities.ElementAt<AbilityBase>(0);
         if(firstAbility != null)
         {
             firstAbility.bAbilityInputPressed = _bAbilityOnePressed;
+        }
+        AbilityBase secondAbility = playerAbilities.ElementAt<AbilityBase>(1);
+        if(secondAbility != null)
+        {
+            secondAbility.bAbilityInputPressed = _bAbilityTwoPressed;
         }
         bJustLeftClicked =  _bJustLeftClicked;
         InputDirection = _InputDirection;

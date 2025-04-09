@@ -4,5 +4,3 @@
 
 [node name="AbilityStealth" type="Node3D"]
 script = ExtResource("1_4hvgt")
-
-[node name="gaming" type="Node3D" parent="."]
