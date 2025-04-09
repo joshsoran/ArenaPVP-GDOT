@@ -56,7 +56,7 @@ public partial class NetworkAnimations : Node
         {
             PlayerAnimationTree.Set("parameters/Transition/transition_request", "Grounded");
 
-            TargetSpeed = Player.InputDirection.Normalized();
+            TargetSpeed = ((Vector2)Player.GetPlayerInputController().Get("InputDirection")).Normalized();
             CurrentVelocity = CurrentVelocity.MoveToward(-TargetSpeed, StrafeAcceleration * (float)delta);
             Vector2 strafeInput = new Vector2(CurrentVelocity.X, -CurrentVelocity.Y);
             PlayerAnimationTree.Set("parameters/Locomotion/blend_position", strafeInput);
@@ -66,7 +66,7 @@ public partial class NetworkAnimations : Node
             // Vector2 StrafeDirection2 = new Vector2(StrafeDirection3.X, StrafeDirection3.Y);
             // PlayerAnimationTree.Set("parameters/Locomotion/blend_position", -StrafeDirection2);
 
-            if(Player.bJustJumped)
+            if((bool)Player.GetPlayerInputController().Get("bJustJumped"))
             {
                 PlayerAnimationTree.Set("parameters/OneShot/request", 1);
             }
@@ -77,7 +77,7 @@ public partial class NetworkAnimations : Node
         }
 
         // Left click attack
-        if(Player.bJustLeftClicked)
+        if((bool)Player.GetPlayerInputController().Get("bJustLeftClicked"))
         {
             bool isActive = (bool)PlayerAnimationTree.Get("parameters/oneshot_attack/active");
             if (!isActive)

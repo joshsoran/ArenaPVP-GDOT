@@ -15,7 +15,8 @@ public partial class AbilityController : Node3D
 	public Timer globalCooldownTimer = new Timer();
 	private double globalCooldownTime = 1.0;
 
-	public Godot.Collections.Array<AbilityBase> loadedAbilities = new Godot.Collections.Array<AbilityBase>();
+	private Godot.Collections.Array<AbilityBase> loadedAbilities = new Godot.Collections.Array<AbilityBase>();
+	public ref Godot.Collections.Array<AbilityBase> GetLoadedAbilities() { return ref loadedAbilities; }
 	
 	public override void _Ready()
 	{

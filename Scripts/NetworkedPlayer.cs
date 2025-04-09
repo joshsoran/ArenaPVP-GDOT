@@ -11,21 +11,24 @@ public partial class NetworkedPlayer : CharacterBody3D
     public float Speed = 5.0f;
     [Export]
     public float JumpVelocity = 4.5f;
-    [Export]
-    public float MouseSensitivity = 0.1f;
+
     [Export]
     public Camera3D LocalCamera;
     [Export]
     public Node3D LocalCameraMount;
+
     [Export]
     private AbilityController playerAbilityController;
+    public ref AbilityController GetPlayerAbilityController() { return ref playerAbilityController; }
+
+    [Export]
+    private NetworkedInput playerInputController;
+    public ref NetworkedInput GetPlayerInputController() { return ref playerInputController; }
 
     // Publics
     public int NetworkId;
     public Vector3 _targetVelocity = Vector3.Zero;
-    public Vector2 InputDirection = Vector2.Zero;
-    public bool bJustJumped = false;
-    public bool bJustLeftClicked = false;
+
     public bool bIsInitialized = false;   
     public Network NetworkNode; 
     public bool _canDealDamage = false; // prevent weapon from over-dealing damage
@@ -57,6 +60,7 @@ public partial class NetworkedPlayer : CharacterBody3D
 
     public override void _Ready()
     {
+        playerInputController.Set("owningPlayer", this);
         if(Multiplayer.IsServer())
         {
             _area3D = GetNode<Area3D>("knight/Node/Skeleton3D/BoneAttachment3D/Area3D"); // Adjust path if necessary
@@ -69,7 +73,7 @@ public partial class NetworkedPlayer : CharacterBody3D
         //This is bad bc it relies on the network node being a parent of all of our networkedplayers
         //We will prolly find a way to do this better later. Maybe an rpc form the network can do this
         NetworkNode = GetParent<Network>();
-
+        
         if(NetworkId == Multiplayer.GetUniqueId())
         {
             LocalCamera.Current = true;
@@ -86,103 +90,15 @@ public partial class NetworkedPlayer : CharacterBody3D
         NetworkNode = _NetworkNode;
     }
 
-    public override void _Input(InputEvent @event)
-    {
-        if(NetworkId != Multiplayer.GetUniqueId() || Multiplayer.IsServer())
-        {
-            return;
-        }
 
-        if(@event is InputEventMouseMotion eventMouseMotion)
-        {
-            float VerticalMouseMovement = eventMouseMotion.Relative.X;
-            RotateY(Mathf.DegToRad(-VerticalMouseMovement * MouseSensitivity));
-            float HorizontalMouseMovement = eventMouseMotion.Relative.Y;
-            LocalCameraMount.RotateX(Mathf.DegToRad(-HorizontalMouseMovement * MouseSensitivity));
-            
-        }
-    }
 
     public override void _PhysicsProcess(double delta)
     {
-        ProcessMovement(InputDirection, bJustJumped, delta);
-        if(Multiplayer.IsServer())
-        {                
-            return;
-        }
-
-        if(NetworkId != Multiplayer.GetUniqueId())
-        {
-            return;
-        }
-
-        InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
-        bJustJumped = Input.IsActionJustPressed("jump");
-        bJustLeftClicked = Input.IsActionJustPressed("left_click");
-        
-        bool bAbilityOnePressed = Input.IsActionJustPressed("ability_one");
-        var playerAbilities = playerAbilityController.loadedAbilities;
-        AbilityBase firstAbility = playerAbilities.ElementAt<AbilityBase>(0);
-        if(firstAbility != null)
-        {
-            firstAbility.bAbilityInputPressed = bAbilityOnePressed;
-        }
-
-        bool bAbilityTwoPressed = Input.IsActionJustPressed("ability_two");
-        AbilityBase secondAbility = playerAbilities.ElementAt<AbilityBase>(1);
-        if(secondAbility != null)
-        {
-            secondAbility.bAbilityInputPressed = bAbilityTwoPressed;
-        }
-
-        foreach (var Peer in Multiplayer.GetPeers())
-        {
-
-            if(Multiplayer.IsServer())
-            {                
-                continue;
-            }
-            
-            if(Peer == NetworkId)
-            {
-                continue;
-            }
-            
-            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped, bJustLeftClicked, bAbilityOnePressed, bAbilityTwoPressed);
-            RpcId(Peer, MethodName.ReplicateLook, Rotation);
-        }
-    }
-
-    //TODO[@cameron] Move input replication to it's own node and script
-    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped, bool _bJustLeftClicked, bool _bAbilityOnePressed, bool _bAbilityTwoPressed)
-    {
-        var playerAbilities = playerAbilityController.loadedAbilities;
-        //we should solve this repetition with a recursive function
-        AbilityBase firstAbility = playerAbilities.ElementAt<AbilityBase>(0);
-        if(firstAbility != null)
-        {
-            firstAbility.bAbilityInputPressed = _bAbilityOnePressed;
-        }
-        AbilityBase secondAbility = playerAbilities.ElementAt<AbilityBase>(1);
-        if(secondAbility != null)
-        {
-            secondAbility.bAbilityInputPressed = _bAbilityTwoPressed;
-        }
-        bJustLeftClicked =  _bJustLeftClicked;
-        InputDirection = _InputDirection;
-        bJustJumped = _bJustJumped;
-    }
-
-    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    public void ReplicateLook(Vector3 LookRotation)
-    {
-        Rotation = LookRotation;
+        ProcessMovement((Vector2)playerInputController.Get("InputDirection"), (bool)playerInputController.Get("bJustJumped"), delta);
     }
 
     public void ProcessMovement(Vector2 _InputDirection, bool _bJustJumped, double delta)
     {
-
         //gravity
         if(!IsOnFloor())
         {
