@@ -23,7 +23,7 @@ public partial class NetworkedInput : Node3D
         if (@event is InputEventMouseMotion eventMouseMotion)
         {
             float VerticalMouseMovement = eventMouseMotion.Relative.X;
-            RotateY(Mathf.DegToRad(-VerticalMouseMovement * MouseSensitivity));
+            owningPlayer.RotateY(Mathf.DegToRad(-VerticalMouseMovement * MouseSensitivity));
             float HorizontalMouseMovement = eventMouseMotion.Relative.Y; 
             owningPlayer.LocalCameraMount.RotateX(Mathf.DegToRad(-HorizontalMouseMovement * MouseSensitivity));
         }
