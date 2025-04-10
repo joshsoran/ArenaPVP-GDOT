@@ -28,14 +28,18 @@ public partial class NetworkedInput : Node3D
             owningPlayer.LocalCameraMount.RotateX(Mathf.DegToRad(-HorizontalMouseMovement * MouseSensitivity));
         }
 
-        if (@event is InputEventKey)
+        if(@event is InputEventMouseButton MouseButtonPressed)
+        {
+            bJustLeftClicked = MouseButtonPressed.IsActionPressed("left_click");
+        }
+
+        if (@event is InputEventKey KeyPressed)
         {
             InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
-            bJustJumped = Input.IsActionJustPressed("jump");
-            bJustLeftClicked = Input.IsActionJustPressed("left_click");
-            bJustCancelledCast = Input.IsActionJustPressed("cancel_cast");
-            bAbilityInputs[0] = Input.IsActionJustPressed("ability_one");
-            bAbilityInputs[1] = Input.IsActionJustPressed("ability_two");
+            bJustJumped = KeyPressed.IsActionPressed("jump");
+            bJustCancelledCast = KeyPressed.IsActionPressed("cancel_cast");
+            bAbilityInputs[0] = KeyPressed.IsActionPressed("ability_one");
+            bAbilityInputs[1] = KeyPressed.IsActionPressed("ability_two");
         }
     }
 
@@ -82,7 +86,7 @@ public partial class NetworkedInput : Node3D
             }
             
             RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped, bJustLeftClicked, bJustCancelledCast, bAbilityInputs);
-            RpcId(Peer, MethodName.ReplicateLook, Rotation);
+            RpcId(Peer, MethodName.ReplicateLook, owningPlayer.Rotation);
         }
     }
 
@@ -115,6 +119,6 @@ public partial class NetworkedInput : Node3D
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
     public void ReplicateLook(Vector3 LookRotation)
     {
-        Rotation = LookRotation;
+        owningPlayer.Rotation = LookRotation;
     }
 }
