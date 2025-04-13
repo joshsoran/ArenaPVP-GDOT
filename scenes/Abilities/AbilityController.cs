@@ -82,7 +82,10 @@ public partial class AbilityController : Node3D
 			{
 				ability.Key.castingTimer.Timeout -= ability.Key.StartAbility;
 				ability.Key.castingTimer.Stop();
-				ability.Value.Hide();
+				if(ability.Key.owningPlayer.NetworkId == Multiplayer.GetUniqueId() && !Multiplayer.IsServer())
+				{
+					ability.Value.Hide();
+				}
 			}
 		}
 		abilityQueue.Clear();
