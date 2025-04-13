@@ -1,8 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://clg87iaoxxvp5"]
+[gd_scene load_steps=4 format=3 uid="uid://clg87iaoxxvp5"]
 
-[ext_resource type="Script" uid="uid://c6wb1pcrks7fu" path="res://Scripts/AbilityFireBall.cs" id="1_v4ok6"]
+[ext_resource type="Script" uid="uid://c6wb1pcrks7fu" path="res://scenes/Abilities/FireBall/AbilityFireBall.cs" id="1_v4ok6"]
 [ext_resource type="PackedScene" uid="uid://br10ks67bv3m7" path="res://scenes/Abilities/FireBall/fire_ball.tscn" id="2_47bmy"]
+[ext_resource type="Texture2D" uid="uid://cobgoguyuqii0" path="res://scenes/Abilities/FireBall/fireball.png" id="3_yv1kj"]
 
 [node name="AbilityFireBall" type="Node3D"]
 script = ExtResource("1_v4ok6")
 fireBall = ExtResource("2_47bmy")
+abilityIcon = ExtResource("3_yv1kj")

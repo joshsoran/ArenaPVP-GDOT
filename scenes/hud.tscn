@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3 uid="uid://doyt2k0enbbuh"]
+
+[ext_resource type="Script" uid="uid://c6tkwjagxjpr7" path="res://Scripts/HUDController.cs" id="1_ahhtf"]
+
+[node name="HUD" type="Control" node_paths=PackedStringArray("abilityIconContainer")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_ahhtf")
+abilityIconContainer = NodePath("AbilityHContainer")
+
+[node name="AbilityHContainer" type="HBoxContainer" parent="."]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 0
+offset_left = 25.0
+offset_top = 559.0
+offset_right = 89.0
+offset_bottom = 623.0
