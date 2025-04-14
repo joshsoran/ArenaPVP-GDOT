@@ -57,6 +57,7 @@ public partial class AbilityController : Node3D
 		{
 			return;
 		}
+
 		AbilityBase ability = abilityQueue.First().Key;
 		if (ability.bHasCastingTime)
 		{
@@ -69,8 +70,8 @@ public partial class AbilityController : Node3D
 		{
 			//activate the abiltiy now becasue it has nho casting time
 			ability.StartAbility();
-			//we don't need to process the next in the queuw bc you
-			//shouldn't be able to queue something after an instant speed ability
+			//remove this from the queue
+			abilityQueue.Remove(ability);
 		}
     }
 

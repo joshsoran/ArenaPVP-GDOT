@@ -9,10 +9,12 @@ public partial class AbilityFireBall : AbilityBase
     public override bool bHasActiveTime { get; set; } = true;
     public override double activeTime { get; set; } = 4.0;
 
-    public override bool bHasCastingTime { get; set; } = true;
-    public override double castingTime { get; set; } = 1.0;
+    public override bool bCanCharge { get; set; } = true;
+    public override double ChargeTime { get; set; } = 0.5;
+    public override double maxChargeCount { get; set; } = 3;
     private FireBall fireBallInstance;
     private float fireBallSpeed = 10.0f;
+    private Vector3 fireBallScale = new Vector3(1, 1, 1);
 
     [Export]
     private PackedScene fireBall;
@@ -32,16 +34,14 @@ public partial class AbilityFireBall : AbilityBase
 
     private void LaunchFireBall()
     {
-        
         fireBallInstance = fireBall.Instantiate<FireBall>();
-        
 		GetTree().CurrentScene.AddChild(fireBallInstance);
-        fireBallInstance.InitializeFireball(owningPlayer, fireBallSpeed, -owningPlayer.GlobalTransform.Basis.Z);
-        
+        //change the fireball size and speed based on charge amount
+        float newFireBallSpeed = fireBallSpeed + (fireBallSpeed * (0.25f * (float)currentChargeCount));
+        Vector3 newFireBallScale = fireBallScale + (fireBallScale * (0.25f * (float)currentChargeCount));
 
-        //change the shader paramaters based on strength
-            //Main Texture Speed vec2
-            //Main Texture Power float (voronoi intensity)
+        fireBallInstance.InitializeFireball(owningPlayer, newFireBallSpeed, -owningPlayer.GlobalTransform.Basis.Z, newFireBallScale);
+        
         GD.Print($"Fireball Launched {Multiplayer.GetUniqueId()}");
     }
 

@@ -19,15 +19,18 @@ public partial class AbilityBase : Node
     public virtual double castingTime { get; set; } = 0.5;
 
     //Charge Timer
-    public virtual bool bHasChargeTime { get; set; } = false;
+    public virtual bool bCanCharge { get; set; } = false;
     public Timer ChargeTimer = new Timer();
     public virtual double ChargeTime { get; set; } = 0.5;
+    public virtual double maxChargeCount { get; set; } = 3;
+    public int currentChargeCount = 0;
 
     [Export]
     public virtual Texture2D abilityIcon { get; set; }
     public TextureRect abilityTextureRect = new TextureRect();
 
     public bool bAbilityInputPressed = false;
+    public bool bAbilityInputReleased = false;
 
     private AbilityController localAbilityController;
 
@@ -68,11 +71,23 @@ public partial class AbilityBase : Node
             ExecuteAbility += StartActiveCooldown;
         }
 
-        if(bHasCastingTime)
+        //The ability can not have both a casting time and a charge time
+        if(bHasCastingTime && bCanCharge)
+        {
+            GD.PrintErr($"The ability {this} can not have both a casting time and charge time");
+        }
+        else if(bHasCastingTime)
         {
             castingTimer.WaitTime = castingTime;
             castingTimer.OneShot = true;
             AddChild(castingTimer);
+        } 
+        else if(bCanCharge)
+        {
+            ChargeTimer.WaitTime = ChargeTime;
+            ChargeTimer.OneShot = false;
+            AddChild(ChargeTimer);
+            ChargeTimer.Timeout += AdjustCharge;
         }
 
     }
@@ -86,23 +101,37 @@ public partial class AbilityBase : Node
             return;
         }
 
+        if (bHasCooldown && cooldownTimer.TimeLeft != 0.0)
+        {
+            return;
+        }
+
+        //we need to move this to a signal system so I don't have to do this on tick boolean bullshit
         if (bAbilityInputPressed)
         {
-            if (bHasCooldown && cooldownTimer.TimeLeft != 0.0)
+            if(bCanCharge)
             {
-                return;
+                //If we haven't already started the timer we will start it here.
+                if(ChargeTimer.IsStopped())
+                {
+                    GD.Print("charge Timer started");
+                    ChargeTimer.Start();
+                    //I don't want to make a funciton for this so you get this abomination of an in-line declared delegate
+                }
             }
-
+        }
+        
+        if (bAbilityInputReleased)
+        {
             if(localAbilityController.abilityQueue.Keys.Contains(this) || localAbilityController.abilityQueue.Count >= 2)
             {
                 return;
             }
-            
 
             localAbilityController.abilityQueue.Add(this, abilityTextureRect);
             
-            //add the ability icon to the hud for the local player
-			if(owningPlayer.NetworkId == Multiplayer.GetUniqueId() && !Multiplayer.IsServer())
+            //add the ability icon to the hud for the local player (don't do this if it's got no casting time)
+			if(owningPlayer.NetworkId == Multiplayer.GetUniqueId() && !Multiplayer.IsServer() && bHasCastingTime)
 			{
                 //move the icon to the right so it's next in the queue on the HUD
 				localAbilityController.playerHUD.abilityIconContainer.MoveChild(abilityTextureRect, abilityTextureRect.GetIndex() + 1);
@@ -122,14 +151,23 @@ public partial class AbilityBase : Node
 
     public void StartAbility()
     {
+        //wait until the input is dropped and then emit a signal and then we can use that charged amount in the child class
+        //GD.Print("ExecuteAbility singal Emitted");
         EmitSignal(SignalName.ExecuteAbility);
         bAbilityInputPressed = false;
+        bAbilityInputReleased = false;
 
         localAbilityController.abilityQueue.Remove(this);
         localAbilityController.ProcessAbilityQueue();
         if(bHasCastingTime)
 		{
             castingTimer.Timeout -= StartAbility;
+        }
+
+        if(bCanCharge)
+        {
+            ChargeTimer.Stop();
+            currentChargeCount = 0;
         }
     }
 
@@ -141,5 +179,14 @@ public partial class AbilityBase : Node
     public void StartActiveCooldown()
     {
         activeTimer.Start();
+    }
+
+    public void AdjustCharge()
+    {
+        if (currentChargeCount < maxChargeCount) 
+        {
+            currentChargeCount++; 
+            GD.Print("charge added");
+        }
     }
 }

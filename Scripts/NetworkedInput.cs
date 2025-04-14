@@ -12,7 +12,8 @@ public partial class NetworkedInput : Node3D
     private bool bJustLeftClicked = false;
     private bool bJustCancelledCast = false;
     //This currently assumes a max of 10 abilities
-    private Godot.Collections.Array<bool> bAbilityInputs = new Godot.Collections.Array<bool>{false, false, false, false, false, false, false, false, false, false};
+    private Godot.Collections.Array<bool> bAbilityPressedInputs = new Godot.Collections.Array<bool>{false, false, false, false, false, false, false, false, false, false};
+    private Godot.Collections.Array<bool> bAbilityReleasedInputs = new Godot.Collections.Array<bool>{false, false, false, false, false, false, false, false, false, false};
     public override void _Input(InputEvent @event)
     {
         if (owningPlayer.NetworkId != Multiplayer.GetUniqueId() || Multiplayer.IsServer())
@@ -38,8 +39,10 @@ public partial class NetworkedInput : Node3D
             InputDirection = Input.GetVector("move_right", "move_left", "move_down", "move_up");
             bJustJumped = KeyPressed.IsActionPressed("jump");
             bJustCancelledCast = KeyPressed.IsActionPressed("cancel_cast");
-            bAbilityInputs[0] = KeyPressed.IsActionPressed("ability_one");
-            bAbilityInputs[1] = KeyPressed.IsActionPressed("ability_two");
+            bAbilityPressedInputs[0] = KeyPressed.IsActionPressed("ability_one");
+            bAbilityReleasedInputs[0] = KeyPressed.IsActionReleased("ability_one");
+            bAbilityPressedInputs[1] = KeyPressed.IsActionPressed("ability_two");
+            bAbilityReleasedInputs[1] = KeyPressed.IsActionReleased("ability_two");
         }
     }
 
@@ -67,7 +70,8 @@ public partial class NetworkedInput : Node3D
                 {
                     continue;
                 }
-                ability.bAbilityInputPressed = bAbilityInputs[i];
+                ability.bAbilityInputPressed = bAbilityPressedInputs[i];
+                ability.bAbilityInputReleased = bAbilityReleasedInputs[i];
                 i++;
             }
         }
@@ -85,13 +89,14 @@ public partial class NetworkedInput : Node3D
                 continue;
             }
             
-            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped, bJustLeftClicked, bJustCancelledCast, bAbilityInputs);
+            RpcId(Peer, MethodName.ReplicateInput, InputDirection, bJustJumped, bJustLeftClicked, bJustCancelledCast, bAbilityPressedInputs, bAbilityReleasedInputs);
             RpcId(Peer, MethodName.ReplicateLook, owningPlayer.Rotation);
         }
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
-    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped, bool _bJustLeftClicked, bool _bJustCancelledCast, Godot.Collections.Array<bool> _bAbilityInputs)
+    public void ReplicateInput(Vector2 _InputDirection, bool _bJustJumped, bool _bJustLeftClicked, bool _bJustCancelledCast,
+                               Godot.Collections.Array<bool> _bAbilityInputPressed , Godot.Collections.Array<bool> _bAbilityInputReleased)
     {
         AbilityController abilityController = owningPlayer != null ? owningPlayer.GetPlayerAbilityController() : null;
         Godot.Collections.Array<AbilityBase> loadedAbilities = abilityController != null ? abilityController.GetLoadedAbilities() : null;
@@ -107,7 +112,8 @@ public partial class NetworkedInput : Node3D
             {
                 continue;
             }
-            ability.bAbilityInputPressed = _bAbilityInputs[i];
+            ability.bAbilityInputPressed = _bAbilityInputPressed[i];
+            ability.bAbilityInputReleased = _bAbilityInputReleased[i];
             i++;
         }
         bJustLeftClicked =  _bJustLeftClicked;
