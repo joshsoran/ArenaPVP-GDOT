@@ -1,5 +1,8 @@
 using Godot;
 using System;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 
 public partial class AbilityBase : Node
 {
@@ -128,6 +131,7 @@ public partial class AbilityBase : Node
                 return;
             }
 
+            //GD.Print($"Added ability {this}");
             localAbilityController.abilityQueue.Add(this, abilityTextureRect);
             
             //add the ability icon to the hud for the local player (don't do this if it's got no casting time)
@@ -155,7 +159,18 @@ public partial class AbilityBase : Node
         //GD.Print("ExecuteAbility singal Emitted");
         EmitSignal(SignalName.ExecuteAbility);
         bAbilityInputPressed = false;
+        //GD.Print($"AbilityInputReleased Set to false");
         bAbilityInputReleased = false;
+        var foundIndex = localAbilityController.GetLoadedAbilities().IndexOf(this);
+        // gaming.Where<AbilityBase>(gaming => gaming.Index);
+        if(foundIndex == -1)
+        {
+            GD.PrintErr("Didn't find ability in loaded abilities.");
+        }
+        else
+        {
+            owningPlayer.GetPlayerInputController().SetAbilityReleasedInput(bAbilityInputReleased, foundIndex);
+        }
 
         localAbilityController.abilityQueue.Remove(this);
         localAbilityController.ProcessAbilityQueue();

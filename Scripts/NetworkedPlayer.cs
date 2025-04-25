@@ -2,13 +2,14 @@ using Godot;
 using Godot.NativeInterop;
 using System;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 
 public partial class NetworkedPlayer : CharacterBody3D
 {
     // Exports
     [Export]
-    public float Speed = 5.0f;
+    public float defaultSpeed = 5.0f;
     [Export]
     public float JumpVelocity = 4.5f;
 
@@ -28,20 +29,29 @@ public partial class NetworkedPlayer : CharacterBody3D
     // Publics
     public int NetworkId;
     public Vector3 _targetVelocity = Vector3.Zero;
-
     public bool bIsInitialized = false;   
     public Network NetworkNode; 
     public bool _canDealDamage = false; // prevent weapon from over-dealing damage
+    public bool characterLocked = false; // for locking player input
+    public Vector3 forcedDirection = Vector3.Zero;
+    public bool forceMove = false;
+    public float forcedSpeed = 0f;
+    public Vector3 normalInputDirection = Vector3.Zero;
+    public Node LastEnteredBody { get; private set; }
+
+    [Signal]
+    public delegate void BodyEnteredExternalEventHandler(Node body);
 
     // Privates
     private float Gravity = 9.81f;
-    private Area3D _area3D; // for weapon detection
-
+    public Area3D _WeaponArea3D; // for weapon detection
+    public Area3D _PlayerArea3D; // player body
     private Godot.Collections.Dictionary<int, Vector3> PeerPositionsToResync = new Godot.Collections.Dictionary<int, Vector3>();
+    
     
 
     // weapon collision detection
-    private void OnBodyEntered(Node3D body)
+    private void OnWeaponCollision(Node3D body)
     {
         // Return conditions
         // If not server
@@ -58,13 +68,27 @@ public partial class NetworkedPlayer : CharacterBody3D
         //GD.Print($"Enemy HP: {body.Get("currentHealth")}");
     }
 
+    public void OnPlayerCollision(Node3D body)
+    {
+        // Return conditions
+        // If not server
+        // if(!Multiplayer.IsServer()) return;
+        // Emit signal
+        EmitSignal(SignalName.BodyEnteredExternal, body);
+    }
+
     public override void _Ready()
     {
         playerInputController.Set("owningPlayer", this);
         if(Multiplayer.IsServer())
         {
-            _area3D = GetNode<Area3D>("knight/Node/Skeleton3D/BoneAttachment3D/Area3D"); // Adjust path if necessary
-            _area3D.BodyEntered += OnBodyEntered;
+            // weapon collision
+            _WeaponArea3D = GetNode<Area3D>("knight/Node/Skeleton3D/BoneAttachment3D/Area3D"); // Adjust path if necessary
+            _WeaponArea3D.BodyEntered += OnWeaponCollision;
+
+            // player collision
+            _PlayerArea3D = GetNode<Area3D>("CollisionShape3D/Area3D"); // Adjust path if necessary
+            _PlayerArea3D.BodyEntered += OnPlayerCollision;
             return;
         }
 
@@ -94,43 +118,54 @@ public partial class NetworkedPlayer : CharacterBody3D
 
     public override void _PhysicsProcess(double delta)
     {
-        ProcessMovement((Vector2)playerInputController.Get("InputDirection"), (bool)playerInputController.Get("bJustJumped"), delta);
+        // forced movement like ability usage, being feared away, being taunted, etc.
+        if(forceMove)
+        {
+            ProcessMovement(forcedDirection, false, delta, forcedSpeed);
+        }
+        else
+        {
+            // Take player movement input, transform it into a vector 3, and normalize
+            normalInputDirection = (Transform.Basis * new Vector3(((Vector2)playerInputController.Get("InputDirection")).X, 0, ((Vector2)playerInputController.Get("InputDirection")).Y)).Normalized();
+            ProcessMovement(normalInputDirection, (bool)playerInputController.Get("bJustJumped"), delta, defaultSpeed);
+        }
     }
 
-    public void ProcessMovement(Vector2 _InputDirection, bool _bJustJumped, double delta)
+    public void ProcessMovement(Vector3 _InputDirection, bool _bJustJumped, double delta, float speed)
     {
-        //gravity
+         // gravity
         if(!IsOnFloor())
         {
             _targetVelocity.Y -= Gravity * (float)delta;
         }
-
+        
+        // Handle jump
         if(_bJustJumped && IsOnFloor())
         {
             _targetVelocity.Y = JumpVelocity;
         }
-
-        Vector3 Direction = (Transform.Basis * new Vector3(_InputDirection.X, 0, _InputDirection.Y)).Normalized();
-
-        if(Direction.IsZeroApprox())
+  
+        // Movement
+        if(_InputDirection.IsZeroApprox())
         {
-            _targetVelocity.X = Direction.X * Speed;
-            _targetVelocity.Z = Direction.Z * Speed;
+            _targetVelocity.X = _InputDirection.X * speed;
+            _targetVelocity.Z = _InputDirection.Z * speed;
         }
         else
         {
-            _targetVelocity.X = Mathf.Lerp(Direction.X, 0, Speed);
-            _targetVelocity.Z = Mathf.Lerp(Direction.Z, 0, Speed);
+            _targetVelocity.X = Mathf.Lerp(_InputDirection.X, 0, speed);
+            _targetVelocity.Z = Mathf.Lerp(_InputDirection.Z, 0, speed);
         }
 
+        // Not sure why renaming of this is needed?
         Velocity = _targetVelocity;
+        //GD.Print($"Velocity {Velocity}");
         MoveAndSlide();
 
         if(Multiplayer.IsServer())
         {
             return;
         }
-
         if(!GetRealVelocity().IsZeroApprox() || !_InputDirection.IsZeroApprox() || _bJustJumped)
         {
             NetworkNode.RpcId(1, Network.MethodName.ValidateClientPostionAgainstServer, NetworkId, Position);

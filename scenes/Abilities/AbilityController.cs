@@ -59,6 +59,7 @@ public partial class AbilityController : Node3D
 		}
 
 		AbilityBase ability = abilityQueue.First().Key;
+		//GD.Print($"Processed ability {ability}");
 		if (ability.bHasCastingTime)
 		{
 			ability.castingTimer.Timeout += ability.StartAbility;

@@ -22,6 +22,8 @@ project/assembly_name="Arenapvp"
 [global_group]
 
 Enemy=""
+Ground=""
+Object=""
 
 [input]
 

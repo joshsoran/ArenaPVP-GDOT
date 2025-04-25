@@ -1,19 +1,31 @@
 using Godot;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 public partial class NetworkedInput : Node3D
 {
-    private Vector2 InputDirection = Vector2.Zero;
+    // Publics
+
+    // Privates
+    public Vector2 InputDirection = Vector2.Zero;
     private NetworkedPlayer owningPlayer;
     [Export]
     public float MouseSensitivity = 0.1f;
     private bool bJustJumped = false;
-    private bool bJustLeftClicked = false;
+    public bool bJustLeftClicked = false;
     private bool bJustCancelledCast = false;
     //This currently assumes a max of 10 abilities
     private Godot.Collections.Array<bool> bAbilityPressedInputs = new Godot.Collections.Array<bool>{false, false, false, false, false, false, false, false, false, false};
     private Godot.Collections.Array<bool> bAbilityReleasedInputs = new Godot.Collections.Array<bool>{false, false, false, false, false, false, false, false, false, false};
+    
+    public void SetAbilityReleasedInput(bool inputBool, int index)
+    {
+        if(bAbilityReleasedInputs.ElementAt<bool>(index))
+        {
+            bAbilityReleasedInputs[index] = inputBool;
+        }
+    }
     public override void _Input(InputEvent @event)
     {
         if (owningPlayer.NetworkId != Multiplayer.GetUniqueId() || Multiplayer.IsServer())
@@ -21,6 +33,8 @@ public partial class NetworkedInput : Node3D
             return;
         }
 
+        // Lock player input
+        if (owningPlayer.characterLocked){return;}
         if (@event is InputEventMouseMotion eventMouseMotion)
         {
             float VerticalMouseMovement = eventMouseMotion.Relative.X;
@@ -43,6 +57,8 @@ public partial class NetworkedInput : Node3D
             bAbilityReleasedInputs[0] = KeyPressed.IsActionReleased("ability_one");
             bAbilityPressedInputs[1] = KeyPressed.IsActionPressed("ability_two");
             bAbilityReleasedInputs[1] = KeyPressed.IsActionReleased("ability_two");
+            bAbilityPressedInputs[2] = KeyPressed.IsActionPressed("ability_three");
+            bAbilityReleasedInputs[2] = KeyPressed.IsActionReleased("ability_three");
         }
     }
 
