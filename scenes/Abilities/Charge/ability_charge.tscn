@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://djr8eie2lv11h"]
 
-[ext_resource type="Script" uid="uid://bfrdomkjpuabj" path="res://scenes/Abilities/Charge/Charge.cs" id="1_pngua"]
+[ext_resource type="Script" uid="uid://bfrdomkjpuabj" path="res://scenes/Abilities/Charge/AbilityCharge.cs" id="1_pngua"]
 
 [node name="ChargeAbility" type="Node3D"]
 script = ExtResource("1_pngua")

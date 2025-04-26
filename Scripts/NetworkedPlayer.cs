@@ -71,8 +71,8 @@ public partial class NetworkedPlayer : CharacterBody3D
     public void OnPlayerCollision(Node3D body)
     {
         // Return conditions
-        // If not server
-        // if(!Multiplayer.IsServer()) return;
+        // Only emit signal if server
+        if(!Multiplayer.IsServer()){return;}
         // Emit signal
         EmitSignal(SignalName.BodyEnteredExternal, body);
     }

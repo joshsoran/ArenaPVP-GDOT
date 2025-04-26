@@ -1,10 +1,7 @@
 using Godot;
 using System;
 
-//TODO:
-// [ ] - Collision detection on the server
-// [ ] - Then, RPC StopCharge(); from the server to the client (using RPC ID)
-public partial class Charge : AbilityBase
+public partial class AbilityCharge : AbilityBase
 {
     // Exports
     [Export]
@@ -41,12 +38,10 @@ public partial class Charge : AbilityBase
         {
             // End timer pre-maturely
             //activeTimer.Stop();
-
             GD.Print($"Player colliding with {body.Name} and isCharging {isCharging}");
-
+            RpcId(owningPlayer.NetworkId, AbilityCharge.MethodName.ChargeStop);
             ChargeStop();
-
-            activeTimer.Timeout -= ChargeStop;  
+            //activeTimer.Timeout -= ChargeStop;  
 
             // Deal damage to dummy
             body.Rpc(TargetDummy.MethodName.TakeDamage, chargeDamage);
@@ -55,10 +50,16 @@ public partial class Charge : AbilityBase
 
     private void ChargeForward() // Function that starts the charge
     {
-        isCharging = true;
-        // Grab collider body 
+        // Grab collider body - ONLY IF SERVER - SERVER-SIDE DETECTION ONLY!!!
         // Doing it here instead of _Ready so that it has enough time to init.
-        owningPlayer.BodyEnteredExternal += OnAreaDetectedSomething;
+        if(Multiplayer.IsServer())
+        {
+            // Only detect collision if player is already charging
+            isCharging = true;
+            owningPlayer.BodyEnteredExternal += OnAreaDetectedSomething;
+        }
+
+        // Lock player input
         owningPlayer.characterLocked = true;
         
         // Move forward
@@ -72,7 +73,7 @@ public partial class Charge : AbilityBase
         owningPlayer.GetPlayerInputController().bJustLeftClicked = false;
     }
 
-    // 
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
     private void ChargeStop()
     {
         // Reset all player input
@@ -81,6 +82,17 @@ public partial class Charge : AbilityBase
         owningPlayer.forceMove = false;
         owningPlayer.GetPlayerInputController().InputDirection = Vector2.Zero;
         owningPlayer.GetPlayerInputController().bJustLeftClicked = false;
-        GD.Print("stopped charging...");
+
+        // interrupt timer
+        if(activeTimer.TimeLeft > 0)
+        {
+            activeTimer.Stop();
+        }
+
+
+        if(Multiplayer.IsServer())
+            GD.Print("SERVER: stopped charging...");
+        else
+            GD.Print("LOCAL: stopped charging...");
     }
 }
