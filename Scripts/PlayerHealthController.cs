@@ -22,16 +22,32 @@ public partial class PlayerHealthController : Node3D
 	[Rpc(MultiplayerApi.RpcMode.Authority, CallLocal = true)]
 	public void TakeDamage(short damageAmount)
 	{
-		// prevent negative HP
-		if(currentHealth < damageAmount){
-			damageAmount = currentHealth;
-		}
 
 		// subtract damage from current hp
 		currentHealth -= damageAmount;
 
-		// VISUAL - Subtract damage from HP bar
-		playerHealthBar.Value -= damageAmount;
+        if(currentHealth <= 0)
+        {
+            //I don't like this parental call
+            //maybe a an export reference would be better maybe it doesn't matter for now
+            if (Multiplayer.IsServer())
+            {
+                GetParent<NetworkedPlayer>().RespawnPlayer();
+            }
+            //I think this should be handled in respawn player or maybe in it's own reset health method
+            //for now we don't have too much complexity so this is fine
+        
+            currentHealth = maxHealth;
+            playerHealthBar.Value = maxHealth;
+        }
+        else
+        {
+            // VISUAL - Subtract damage from HP bar
+            playerHealthBar.Value -= damageAmount;
+        }
+
+
+
 	}
 
 }

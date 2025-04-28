@@ -52,7 +52,19 @@ public partial class NetworkedPlayer : CharacterBody3D
     public Area3D _PlayerArea3D; // player body
     private Godot.Collections.Dictionary<int, Vector3> PeerPositionsToResync = new Godot.Collections.Dictionary<int, Vector3>();
     
-    
+    public void RespawnPlayer()
+    {
+        //in the future we will do other things here for now just change the position.
+        //This works because this is only ever called on the server and then...
+        //the client get's told it's out of position from our desync handling and get's moved
+        Position = new Vector3(0, 0, 0);
+        foreach (int connectedPlayerId in Multiplayer.GetPeers())
+        {
+            RpcId(connectedPlayerId, MethodName.UpdateOutOfSyncClientPosition, NetworkId, Position);
+        }
+        
+        //UpdateOutOfSyncClientPosition(NetworkId, Position);
+    }
 
     // weapon collision detection
     private void OnWeaponCollision(Node3D body)
@@ -126,8 +138,9 @@ public partial class NetworkedPlayer : CharacterBody3D
             LocalCamera.Current = true;
             bIsInitialized = true;
             InitializeOnServer();
+            //we can make the local palyer health bar invisible and then turn on visibility for a HUD health bar
+            //playerHealthController.Visible = false;
         }
-
         //playerAbilityController.PostPlayerLoad();
     }
 
@@ -136,8 +149,6 @@ public partial class NetworkedPlayer : CharacterBody3D
     {
         NetworkNode = _NetworkNode;
     }
-
-
 
     public override void _PhysicsProcess(double delta)
     {
@@ -193,7 +204,6 @@ public partial class NetworkedPlayer : CharacterBody3D
         {
             NetworkNode.RpcId(1, Network.MethodName.ValidateClientPostionAgainstServer, NetworkId, Position);
         }
-
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false)]
@@ -205,8 +215,6 @@ public partial class NetworkedPlayer : CharacterBody3D
         {
             Position = ServerPosition;
         }
-        
-
     }
 
     private void InitializeOnServer()
@@ -222,5 +230,4 @@ public partial class NetworkedPlayer : CharacterBody3D
         //deactivated for now but keeping it for future debugging
         //NetworkNode.RpcId(1, Network.MethodName.ValidateClientPostionAgainstServer, Multiplayer.GetUniqueId(), Position);
     }
-
 }
