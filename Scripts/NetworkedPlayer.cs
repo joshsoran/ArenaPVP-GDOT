@@ -18,6 +18,10 @@ public partial class NetworkedPlayer : CharacterBody3D
     [Export]
     public Node3D LocalCameraMount;
 
+
+    [Export]
+    private PlayerHealthController playerHealthController;
+
     [Export]
     private AbilityController playerAbilityController;
     public ref AbilityController GetPlayerAbilityController() { return ref playerAbilityController; }
@@ -31,7 +35,6 @@ public partial class NetworkedPlayer : CharacterBody3D
     public Vector3 _targetVelocity = Vector3.Zero;
     public bool bIsInitialized = false;   
     public Network NetworkNode; 
-    public bool _canDealDamage = false; // prevent weapon from over-dealing damage
     public bool characterLocked = false; // for locking player input
     public Vector3 forcedDirection = Vector3.Zero;
     public bool forceMove = false;
@@ -43,6 +46,7 @@ public partial class NetworkedPlayer : CharacterBody3D
     public delegate void BodyEnteredExternalEventHandler(Node body);
 
     // Privates
+    private bool bCanDealDamage = false;
     private float Gravity = 9.81f;
     public Area3D _WeaponArea3D; // for weapon detection
     public Area3D _PlayerArea3D; // player body
@@ -53,17 +57,36 @@ public partial class NetworkedPlayer : CharacterBody3D
     // weapon collision detection
     private void OnWeaponCollision(Node3D body)
     {
-        // Return conditions
         // If not server
-        if(!Multiplayer.IsServer()) return;
-        // if can't deal damage
-        if(!_canDealDamage) return;
-        // If not enemy
-        if(!body.IsInGroup("Enemy")) return;
+        if (!Multiplayer.IsServer()) 
+        {
+            return;
+        }
 
-        // Deal damage
-        body.Rpc(TargetDummy.MethodName.TakeDamage, 10);
-        _canDealDamage = false; 
+        // if can't deal damage
+        if(!bCanDealDamage) 
+        {
+            return;
+        }
+        // If not enemy
+        //if(!body.IsInGroup("Enemy")) return;
+
+        NetworkedPlayer HitPlayer = (NetworkedPlayer)body;
+        //ensure what we hit was a playe
+        if(HitPlayer == null)
+        {
+            return;
+        }
+
+        //and that the player hit isn't the player that's trying to hit something
+        if(NetworkId == HitPlayer.NetworkId)
+        {
+            return;
+        }
+
+        // Deal Basic Melee Damage
+        HitPlayer.playerHealthController.Rpc(PlayerHealthController.MethodName.TakeDamage, 10);
+        bCanDealDamage = false; 
 
         //GD.Print($"Enemy HP: {body.Get("currentHealth")}");
     }

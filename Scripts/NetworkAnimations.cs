@@ -83,7 +83,7 @@ public partial class NetworkAnimations : Node
             if (!isActive)
             {
                 PlayerAnimationTree.Set("parameters/oneshot_attack/request", 1);
-                Player._canDealDamage = true;
+                Player.Set("bCanDealDamage", true);
                 //GD.Print($"Damage: {Player._canDealDamage}");
             }
         }
@@ -92,7 +92,7 @@ public partial class NetworkAnimations : Node
             bool isActive = (bool)PlayerAnimationTree.Get("parameters/oneshot_attack/active");
             if(!isActive) // if animation stopped playing, make sure player can't do anymore damage
             {
-                Player._canDealDamage = false;
+                Player.Set("bCanDealDamage", false);
                 //GD.Print($"Damage: {Player._canDealDamage}");
             }   
         }
