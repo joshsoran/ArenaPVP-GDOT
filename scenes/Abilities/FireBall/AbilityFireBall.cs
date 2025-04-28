@@ -30,17 +30,34 @@ public partial class AbilityFireBall : AbilityBase
         //we should have the fireball fizzle out before going away instead of blipping out of existance
         activeTimer.Timeout += RemoveFireBall;
 
+        StartCharge += InitFireBall;
+
+    }
+
+    private void InitFireBall()
+    {
+        //this is not a good way fo doing this. We will improve on this hacky solution if we add a real fireball to the game
+        //probably use a different charge vfx/animation entirely
+        fireBallInstance = fireBall.Instantiate<FireBall>();
+        fireBallInstance.owningPlayer = owningPlayer;
+		owningPlayer.AddChild(fireBallInstance);
+        //fireBallInstance.Position += owningPlayer.GlobalTransform.Basis.Y;
+
+        ChargeTimer.Timeout += IncreaseFireBallCharge;
+    }
+
+    private void IncreaseFireBallCharge()
+    {
+        Vector3 newFireBallScale = fireBallScale + (fireBallScale * (0.25f * (float)currentChargeCount));
+        fireBallInstance.SetFireBallScale(newFireBallScale);
     }
 
     private void LaunchFireBall()
     {
-        fireBallInstance = fireBall.Instantiate<FireBall>();
-		GetTree().CurrentScene.AddChild(fireBallInstance);
-        //change the fireball size and speed based on charge amount
+        fireBallInstance.Reparent(GetTree().CurrentScene);
+        //change the fireball speed based on charge amount
         float newFireBallSpeed = fireBallSpeed + (fireBallSpeed * (0.25f * (float)currentChargeCount));
-        Vector3 newFireBallScale = fireBallScale + (fireBallScale * (0.25f * (float)currentChargeCount));
-
-        fireBallInstance.InitializeFireball(owningPlayer, newFireBallSpeed, -owningPlayer.GlobalTransform.Basis.Z, newFireBallScale);
+        fireBallInstance.ShootFireball(newFireBallSpeed, -owningPlayer.GlobalTransform.Basis.Z);
         
         GD.Print($"Fireball Launched {Multiplayer.GetUniqueId()}");
     }

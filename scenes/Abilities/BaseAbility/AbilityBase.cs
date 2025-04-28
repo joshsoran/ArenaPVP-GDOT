@@ -40,6 +40,9 @@ public partial class AbilityBase : Node
     public NetworkedPlayer owningPlayer;
 
     [Signal]
+    public delegate void StartChargeEventHandler();
+
+    [Signal]
     public delegate void ExecuteAbilityEventHandler();
 
     [Signal]
@@ -109,7 +112,7 @@ public partial class AbilityBase : Node
             return;
         }
 
-        //we need to move this to a signal system so I don't have to do this on tick boolean bullshit
+        //TODO @cameron.Perrin: we need to move input booleans to a signal system so I don't have to do this on tick boolean bullshit
         if (bAbilityInputPressed)
         {
             if(bCanCharge)
@@ -119,7 +122,7 @@ public partial class AbilityBase : Node
                 {
                     GD.Print("charge Timer started");
                     ChargeTimer.Start();
-                    //I don't want to make a funciton for this so you get this abomination of an in-line declared delegate
+                    EmitSignal(SignalName.StartCharge);
                 }
             }
         }
@@ -162,7 +165,6 @@ public partial class AbilityBase : Node
         //GD.Print($"AbilityInputReleased Set to false");
         bAbilityInputReleased = false;
         var foundIndex = localAbilityController.GetLoadedAbilities().IndexOf(this);
-        // gaming.Where<AbilityBase>(gaming => gaming.Index);
         if(foundIndex == -1)
         {
             GD.PrintErr("Didn't find ability in loaded abilities.");

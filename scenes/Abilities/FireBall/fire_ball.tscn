@@ -50,12 +50,14 @@ turbulence_noise_strength = 20.0
 
 [sub_resource type="QuadMesh" id="QuadMesh_attub"]
 
-[node name="FireBall" type="RigidBody3D" node_paths=PackedStringArray("outerSphere")]
+[node name="FireBall" type="RigidBody3D" node_paths=PackedStringArray("outerSphere", "innerBillboard", "collisionShape")]
 collision_layer = 2048
 collision_mask = 2048
 gravity_scale = 0.0
 script = ExtResource("1_fwlct")
 outerSphere = NodePath("OuterSphere")
+innerBillboard = NodePath("InnerBillboard")
+collisionShape = NodePath("CollisionShape3D")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("SphereShape3D_nxuwe")
