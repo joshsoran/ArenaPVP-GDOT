@@ -1,0 +1,136 @@
+[gd_scene load_steps=4 format=3 uid="uid://dnw17f5eb3kfe"]
+
+[ext_resource type="Script" uid="uid://b5w2aip22sacp" path="res://scenes/Menus/PauseMenuController.cs" id="1_prkpd"]
+[ext_resource type="Texture2D" uid="uid://dw8nl4h3y8twt" path="res://scenes/Menus/textures/1x4_button.png" id="1_vrwda"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_3k1r1"]
+texture = ExtResource("1_vrwda")
+
+[node name="PauseMenu" type="Node2D" node_paths=PackedStringArray("UltimateMenu", "pauseMenu", "settingsMenu", "abilityMenu", "settingsButton", "abilitiesButton", "mainBackButton", "settingsBackButton", "abilityBackButton")]
+script = ExtResource("1_prkpd")
+UltimateMenu = NodePath("Control")
+pauseMenu = NodePath("Control/MainPauseVBoxContainer")
+settingsMenu = NodePath("Control/SettingMenuVBoxContainer")
+abilityMenu = NodePath("Control/AbilityMenuVBoxContainer")
+settingsButton = NodePath("Control/MainPauseVBoxContainer/SettingsRTL")
+abilitiesButton = NodePath("Control/MainPauseVBoxContainer/AbilitiesRTL")
+mainBackButton = NodePath("Control/MainPauseVBoxContainer/MainBackRTL")
+settingsBackButton = NodePath("Control/SettingMenuVBoxContainer/SettingsBackRTL")
+abilityBackButton = NodePath("Control/AbilityMenuVBoxContainer/AbilitiesBackRTL")
+
+[node name="Control" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainPauseVBoxContainer" type="VBoxContainer" parent="Control"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = 650.0
+
+[node name="SettingsRTL" type="RichTextLabel" parent="Control/MainPauseVBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/normal_font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxTexture_3k1r1")
+text = "Settings"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+
+[node name="AbilitiesRTL" type="RichTextLabel" parent="Control/MainPauseVBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/normal_font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxTexture_3k1r1")
+text = "Abilities"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+
+[node name="MainBackRTL" type="RichTextLabel" parent="Control/MainPauseVBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/normal_font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxTexture_3k1r1")
+text = "Back
+"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+
+[node name="SettingMenuVBoxContainer" type="VBoxContainer" parent="Control"]
+visible = false
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = 650.0
+
+[node name="TempSettingsRTL" type="RichTextLabel" parent="Control/SettingMenuVBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/normal_font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxTexture_3k1r1")
+text = "Ur serttings are so ultra babe"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+
+[node name="SettingsBackRTL" type="RichTextLabel" parent="Control/SettingMenuVBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/normal_font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxTexture_3k1r1")
+text = "Back
+"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false
+
+[node name="AbilityMenuVBoxContainer" type="VBoxContainer" parent="Control"]
+visible = false
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = 650.0
+
+[node name="AbilitiesBackRTL" type="RichTextLabel" parent="Control/AbilityMenuVBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/normal_font_size = 50
+theme_override_styles/normal = SubResource("StyleBoxTexture_3k1r1")
+text = "Back
+"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+deselect_on_focus_loss_enabled = false
+drag_and_drop_selection_enabled = false

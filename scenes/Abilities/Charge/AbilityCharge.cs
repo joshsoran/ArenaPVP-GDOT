@@ -60,7 +60,7 @@ public partial class AbilityCharge : AbilityBase
         }
 
         // Lock player input
-        owningPlayer.characterLocked = true;
+        owningPlayer.bInputsLocked = true;
         
         // Move forward
         var forward = owningPlayer.Transform.Basis.Z.Normalized(); // grab player forward
@@ -78,7 +78,7 @@ public partial class AbilityCharge : AbilityBase
     {
         // Reset all player input
         isCharging = false;
-        owningPlayer.characterLocked = false; //unlock character
+        owningPlayer.bInputsLocked = false; //unlock character
         owningPlayer.forceMove = false;
         owningPlayer.GetPlayerInputController().InputDirection = Vector2.Zero;
         owningPlayer.GetPlayerInputController().bJustLeftClicked = false;

@@ -35,7 +35,7 @@ public partial class NetworkedPlayer : CharacterBody3D
     public Vector3 _targetVelocity = Vector3.Zero;
     public bool bIsInitialized = false;   
     public Network NetworkNode; 
-    public bool characterLocked = false; // for locking player input
+    public bool bInputsLocked = false; // for locking player input
     public Vector3 forcedDirection = Vector3.Zero;
     public bool forceMove = false;
     public float forcedSpeed = 0f;
@@ -46,6 +46,8 @@ public partial class NetworkedPlayer : CharacterBody3D
     public delegate void BodyEnteredExternalEventHandler(Node body);
 
     // Privates
+    [Export]
+    private PackedScene pauseMenu;
     private bool bCanDealDamage = false;
     private float Gravity = 9.81f;
     public Area3D _WeaponArea3D; // for weapon detection
@@ -140,6 +142,12 @@ public partial class NetworkedPlayer : CharacterBody3D
             InitializeOnServer();
             //we can make the local palyer health bar invisible and then turn on visibility for a HUD health bar
             //playerHealthController.Visible = false;
+            //load and add a pause menu to the local player
+            //this method lets us carry the paause menu through to different maps and even modify it based on paramaters here
+            //this causes errors and idk why so I'm done now
+            //PauseMenuController puaseMenuInstance = pauseMenu.Instantiate<PauseMenuController>();
+			//AddChild(puaseMenuInstance);
+            //puaseMenuInstance.owningPlayer = this;
         }
         //playerAbilityController.PostPlayerLoad();
     }

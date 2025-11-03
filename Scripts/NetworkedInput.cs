@@ -34,7 +34,13 @@ public partial class NetworkedInput : Node3D
         }
 
         // Lock player input
-        if (owningPlayer.characterLocked){return;}
+        if (owningPlayer.bInputsLocked)
+        {
+            //we can have an active input that never gets set to false when we enter here
+            //this is intended for charge but not useful for the pause menu
+            //maybe we should make another bool? one for locking inputs and another for locking and clearing inputs
+            return;
+        }
         if (@event is InputEventMouseMotion eventMouseMotion)
         {
             float VerticalMouseMovement = eventMouseMotion.Relative.X;
